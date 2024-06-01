@@ -34,7 +34,7 @@ node {
   output_stream: "DETECTIONS:detections"
   node_options: {
     [type.googleapis.com/mediapipe.FaceDetectionOptions] {
-      model_path: "mediapipe/modules/face_detection/face_detection_short_range.tflite"
+      model_path: "models/face_detection_short_range.tflite"
       tensor_width: 128
       tensor_height: 128
 
