@@ -3,7 +3,6 @@
 #include "absl/strings/str_replace.h"
 
 constexpr char kInputStream[] = "input_video";
-constexpr char kOutputStream[] = "multi_face_landmarks";
 
 #define FACE_LANDMARKS 478
 
@@ -57,7 +56,7 @@ absl::Status MMPGraph::InitMPPGraph(int face_max_num) {
 
   LOG(INFO) << "Start running the calculator graph.";
   // ASSIGN_OR_RETURN(poller, graph.AddOutputStreamPoller(kOutputStream));
-  auto status_or = graph.AddOutputStreamPoller(kOutputStream);
+  auto status_or = graph.AddOutputStreamPoller("face_detections");
   if (!status_or.ok()) {
     return status_or.status();
   }
@@ -91,35 +90,60 @@ absl::Status MMPGraph::RunMPPGraph(const cv::Mat &ori_img,
       kInputStream, mediapipe::Adopt(input_frame.release())
                         .At(mediapipe::Timestamp(frame_timestamp_us))));
   LOG(INFO) << "Sent image packet into the graph.";
-  mediapipe::Packet landmarks_packet;
-  if (poller->Next(&landmarks_packet)) {
-    LOG(INFO) << "Get face landmarks from the graph.";
-    auto &landmarks =
-        landmarks_packet.Get<std::vector<mediapipe::NormalizedLandmarkList>>();
-    for (const auto &landmark : landmarks) {
+  mediapipe::Packet face_detections_packet;
+  if (poller->Next(&face_detections_packet)) {
+    LOG(INFO) << "Get face rects from the graph.";
+    auto &face_detections =
+        face_detections_packet.Get<std::vector<mediapipe::Detection>>();
+    for (const auto &detection : face_detections) {
       FaceInfo face;
       face.score = 1.0;
-      for (size_t i = 0; i < landmark.landmark_size(); i++) {
-        const auto &point = landmark.landmark(i);
-        face.landmarks[i] =
-            cv::Point(point.x() * img.cols, point.y() * img.rows);
-      }
-
-      // 478 -> 68
-      for (int i = 0; i < 68; ++i) {
-        face.landmarks68[i] = face.landmarks[map_478_to_68[i]];
-      }
-
-      for (size_t i = 468; i < 5; i++) {
-        face.left_iris_landmarks[i] = face.landmarks[i];
-      }
-      for (size_t i = 473; i < 5; i++) {
-        face.right_iris_landmarks[i] = face.landmarks[i];
-      }
-
+      std::cout << "Detection: " << detection.location_data().relative_keypoints_size() << std::endl;
       faces.push_back(face);
     }
   }
+  // mediapipe::Packet rects_from_detections_packet;
+  // if (poller->Next(&rects_from_detections_packet)) {
+  //   LOG(INFO) << "Get face rects from the graph.";
+  //   auto &rects = rects_from_detections_packet.Get<std::vector<mediapipe::NormalizedRect>>();
+  //   for (const auto &rect : rects) {
+  //     FaceInfo face;
+  //     face.score = 1.0;
+  //     face.roi = cv::Rect(rect.x_center() * img.cols - rect.width() * img.cols / 2,
+  //                         rect.y_center() * img.rows - rect.height() * img.rows / 2,
+  //                         rect.width() * img.cols, rect.height() * img.rows);
+  //     faces.push_back(face);
+  //   }
+  // }
+  // mediapipe::Packet landmarks_packet;
+  // if (poller->Next(&landmarks_packet)) {
+  //   LOG(INFO) << "Get face landmarks from the graph.";
+  //   auto &landmarks =
+  //       landmarks_packet.Get<std::vector<mediapipe::NormalizedLandmarkList>>();
+  //   for (const auto &landmark : landmarks) {
+  //     FaceInfo face;
+  //     face.score = 1.0;
+  //     for (size_t i = 0; i < landmark.landmark_size(); i++) {
+  //       const auto &point = landmark.landmark(i);
+  //       face.landmarks[i] =
+  //           cv::Point(point.x() * img.cols, point.y() * img.rows);
+  //     }
+
+  //     // 478 -> 68
+  //     for (int i = 0; i < 68; ++i) {
+  //       face.landmarks68[i] = face.landmarks[map_478_to_68[i]];
+  //     }
+
+  //     for (size_t i = 468; i < 5; i++) {
+  //       face.left_iris_landmarks[i] = face.landmarks[i];
+  //     }
+  //     for (size_t i = 473; i < 5; i++) {
+  //       face.right_iris_landmarks[i] = face.landmarks[i];
+  //     }
+
+  //     faces.push_back(face);
+  //   }
+  // }
   LOG(INFO) << "Get face landmarks from the graph.";
 
   return absl::OkStatus();
