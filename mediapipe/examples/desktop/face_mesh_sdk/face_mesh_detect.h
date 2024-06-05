@@ -21,7 +21,10 @@
 class MMPGraph {
  private:
   mediapipe::CalculatorGraph graph;
-  std::unique_ptr<mediapipe::OutputStreamPoller> poller;
+  std::unique_ptr<mediapipe::OutputStreamPoller> face_count_poller_;
+  std::unique_ptr<mediapipe::OutputStreamPoller> face_rects_poller_;
+  std::unique_ptr<mediapipe::OutputStreamPoller> face_detections_poller_;
+  std::unique_ptr<mediapipe::OutputStreamPoller> face_landmarks_poller_;
 
  public:
   MMPGraph();

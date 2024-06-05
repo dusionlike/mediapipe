@@ -8,7 +8,7 @@
 #include "opencv2/opencv.hpp"
 
 struct FaceInfo {
-  cv::Rect roi;
+  cv::RotatedRect roi;
   float score;
   std::vector<cv::Point> landmarks;
   std::vector<cv::Point> landmarks68;

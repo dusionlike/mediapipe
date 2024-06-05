@@ -3,13 +3,13 @@
 #include "face_mesh_sdk.h"
 
 int main() {
-  int ret = initFaceLandmark(1);
+  int ret = initFaceLandmark(5);
   if (ret != 0) {
     std::cerr << "Failed to initialize face landmark." << std::endl;
     return -1;
   }
 
-  for (size_t i = 0; i < 4; i++) {
+  for (size_t i = 0; i < 5; i++) {
     cv::Mat img = cv::imread("data/" + std::to_string(i) + ".jpg");
     std::vector<FaceInfo> faces;
     auto start = cv::getTickCount();

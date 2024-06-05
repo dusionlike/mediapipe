@@ -55,13 +55,25 @@ absl::Status MMPGraph::InitMPPGraph(int face_max_num) {
   MP_RETURN_IF_ERROR(graph.Initialize(config));
 
   LOG(INFO) << "Start running the calculator graph.";
-  // ASSIGN_OR_RETURN(poller, graph.AddOutputStreamPoller(kOutputStream));
-  auto status_or = graph.AddOutputStreamPoller("face_detections");
-  if (!status_or.ok()) {
-    return status_or.status();
-  }
-  poller = absl::make_unique<mediapipe::OutputStreamPoller>(
-      std::move(status_or).value());
+  ASSIGN_OR_RETURN(auto face_count_poller,
+                   graph.AddOutputStreamPoller("face_count"));
+  ASSIGN_OR_RETURN(auto face_detections_poller,
+                   graph.AddOutputStreamPoller("face_detections"));
+  ASSIGN_OR_RETURN(auto face_rects_poller,
+                   graph.AddOutputStreamPoller("face_rects_from_detections"));
+
+  ASSIGN_OR_RETURN(auto face_landmarks_poller,
+                   graph.AddOutputStreamPoller("multi_face_landmarks"));
+  face_count_poller_ = absl::make_unique<mediapipe::OutputStreamPoller>(
+      std::move(face_count_poller));
+  face_detections_poller_ = absl::make_unique<mediapipe::OutputStreamPoller>(
+      std::move(face_detections_poller));
+  face_rects_poller_ = absl::make_unique<mediapipe::OutputStreamPoller>(
+      std::move(face_rects_poller));
+
+  face_landmarks_poller_ = absl::make_unique<mediapipe::OutputStreamPoller>(
+      std::move(face_landmarks_poller));
+
   MP_RETURN_IF_ERROR(graph.StartRun({}));
   return absl::OkStatus();
 }
@@ -89,62 +101,85 @@ absl::Status MMPGraph::RunMPPGraph(const cv::Mat &ori_img,
   MP_RETURN_IF_ERROR(graph.AddPacketToInputStream(
       kInputStream, mediapipe::Adopt(input_frame.release())
                         .At(mediapipe::Timestamp(frame_timestamp_us))));
-  LOG(INFO) << "Sent image packet into the graph.";
+  mediapipe::Packet face_count_packet;
+  if (face_count_poller_->Next(&face_count_packet)) {
+    const int &face_count = face_count_packet.Get<int>();
+    if (face_count == 0) {
+      return absl::OkStatus();
+    }
+  }
+
+  std::vector<cv::Rect2d> boxs;
+  std::vector<float> scores;
+
   mediapipe::Packet face_detections_packet;
-  if (poller->Next(&face_detections_packet)) {
-    LOG(INFO) << "Get face rects from the graph.";
-    auto &face_detections =
+  if (face_detections_poller_->Next(&face_detections_packet)) {
+    auto &detections =
         face_detections_packet.Get<std::vector<mediapipe::Detection>>();
-    for (const auto &detection : face_detections) {
+    for (const auto &detection : detections) {
+      cv::Rect2d box(
+          detection.location_data().relative_bounding_box().xmin() * img.cols,
+          detection.location_data().relative_bounding_box().ymin() * img.rows,
+          detection.location_data().relative_bounding_box().width() * img.cols,
+          detection.location_data().relative_bounding_box().height() *
+              img.rows);
+      boxs.push_back(box);
+      scores.push_back(detection.score().Get(0));
+    }
+  }
+
+  std::vector<int> nms_result;
+  cv::dnn::NMSBoxes(boxs, scores, 0.5, 0.45, nms_result);
+
+  // 带角度的矩形框
+  std::vector<cv::RotatedRect> res_rois;
+
+  mediapipe::Packet face_rects_packet;
+  if (face_rects_poller_->Next(&face_rects_packet)) {
+    auto &rects =
+        face_rects_packet.Get<std::vector<mediapipe::NormalizedRect>>();
+    for (auto &&i : nms_result) {
+      auto rect = rects[i];
+      cv::RotatedRect roi(
+          cv::Point2f(rect.x_center() * img.cols, rect.y_center() * img.rows),
+          cv::Size2f(rect.width() * img.cols, rect.height() * img.rows),
+          rect.rotation());
+
+      res_rois.push_back(roi);
+    }
+  }
+
+  mediapipe::Packet landmarks_packet;
+  if (face_landmarks_poller_->Next(&landmarks_packet)) {
+    auto &landmarks =
+        landmarks_packet.Get<std::vector<mediapipe::NormalizedLandmarkList>>();
+
+    for (auto &&i : nms_result) {
       FaceInfo face;
-      face.score = 1.0;
-      std::cout << "Detection: " << detection.location_data().relative_keypoints_size() << std::endl;
+      face.roi = res_rois[i];
+      face.score = scores[i];
+      auto landmark = landmarks[i];
+      for (size_t i = 0; i < landmark.landmark_size(); i++) {
+        const auto &point = landmark.landmark(i);
+        face.landmarks[i] =
+            cv::Point(point.x() * img.cols, point.y() * img.rows);
+      }
+
+      // 478 -> 68
+      for (int i = 0; i < 68; ++i) {
+        face.landmarks68[i] = face.landmarks[map_478_to_68[i]];
+      }
+
+      for (size_t i = 468; i < 5; i++) {
+        face.left_iris_landmarks[i] = face.landmarks[i];
+      }
+      for (size_t i = 473; i < 5; i++) {
+        face.right_iris_landmarks[i] = face.landmarks[i];
+      }
+
       faces.push_back(face);
     }
   }
-  // mediapipe::Packet rects_from_detections_packet;
-  // if (poller->Next(&rects_from_detections_packet)) {
-  //   LOG(INFO) << "Get face rects from the graph.";
-  //   auto &rects = rects_from_detections_packet.Get<std::vector<mediapipe::NormalizedRect>>();
-  //   for (const auto &rect : rects) {
-  //     FaceInfo face;
-  //     face.score = 1.0;
-  //     face.roi = cv::Rect(rect.x_center() * img.cols - rect.width() * img.cols / 2,
-  //                         rect.y_center() * img.rows - rect.height() * img.rows / 2,
-  //                         rect.width() * img.cols, rect.height() * img.rows);
-  //     faces.push_back(face);
-  //   }
-  // }
-  // mediapipe::Packet landmarks_packet;
-  // if (poller->Next(&landmarks_packet)) {
-  //   LOG(INFO) << "Get face landmarks from the graph.";
-  //   auto &landmarks =
-  //       landmarks_packet.Get<std::vector<mediapipe::NormalizedLandmarkList>>();
-  //   for (const auto &landmark : landmarks) {
-  //     FaceInfo face;
-  //     face.score = 1.0;
-  //     for (size_t i = 0; i < landmark.landmark_size(); i++) {
-  //       const auto &point = landmark.landmark(i);
-  //       face.landmarks[i] =
-  //           cv::Point(point.x() * img.cols, point.y() * img.rows);
-  //     }
-
-  //     // 478 -> 68
-  //     for (int i = 0; i < 68; ++i) {
-  //       face.landmarks68[i] = face.landmarks[map_478_to_68[i]];
-  //     }
-
-  //     for (size_t i = 468; i < 5; i++) {
-  //       face.left_iris_landmarks[i] = face.landmarks[i];
-  //     }
-  //     for (size_t i = 473; i < 5; i++) {
-  //       face.right_iris_landmarks[i] = face.landmarks[i];
-  //     }
-
-  //     faces.push_back(face);
-  //   }
-  // }
-  LOG(INFO) << "Get face landmarks from the graph.";
 
   return absl::OkStatus();
 }

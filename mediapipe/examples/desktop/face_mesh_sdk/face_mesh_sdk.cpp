@@ -78,10 +78,11 @@ int getFaceLandmark(const unsigned char *data, int data_size,
   try {
     *output_face_num = faces.size();
     for (int i = 0; i < faces.size(); i++) {
-      faces_c[i].x = faces[i].roi.x;
-      faces_c[i].y = faces[i].roi.y;
-      faces_c[i].width = faces[i].roi.width;
-      faces_c[i].height = faces[i].roi.height;
+      faces_c[i].center_x = faces[i].roi.center.x;
+      faces_c[i].center_y = faces[i].roi.center.y;
+      faces_c[i].width = faces[i].roi.size.width;
+      faces_c[i].height = faces[i].roi.size.height;
+      faces_c[i].angle = faces[i].roi.angle;
       faces_c[i].score = faces[i].score;
 
       for (int j = 0; j < faces[i].landmarks.size(); j++) {
