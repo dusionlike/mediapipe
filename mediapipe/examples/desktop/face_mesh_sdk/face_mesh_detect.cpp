@@ -18,6 +18,23 @@ const int map_478_to_68[] = {
     78,  81,  13,  311, 308, 402, 14,  178  // 嘴巴
 };
 
+/**
+ * 将图片转换为指定大小的正方形，并且保持原始图片的长宽比不变形，不足的地方用黑色填充
+ */
+float resize_image(const cv::Mat &img, cv::Mat &output, int size) {
+  cv::Size target_size(size, size);
+  cv::Mat padded_img(target_size, img.type(), cv::Scalar(0));
+  float scale = std::min(static_cast<float>(target_size.width) / img.cols,
+                         static_cast<float>(target_size.height) / img.rows);
+  cv::Size new_size = cv::Size(img.cols * scale, img.rows * scale);
+  cv::Mat resized;
+  cv::resize(img, resized, new_size);
+  cv::Rect roi(0, 0, resized.cols, resized.rows);
+  resized.copyTo(padded_img(roi));
+  output = padded_img;
+  return scale;
+}
+
 MMPGraph::MMPGraph() {}
 MMPGraph::~MMPGraph() {}
 
@@ -56,8 +73,10 @@ absl::Status MMPGraph::ReleaseMPPGraph() {
   return absl::OkStatus();
 }
 
-absl::Status MMPGraph::RunMPPGraph(const cv::Mat &img,
+absl::Status MMPGraph::RunMPPGraph(const cv::Mat &ori_img,
                                    std::vector<FaceInfo> &faces) {
+  cv::Mat img;
+  resize_image(ori_img, img, std::max(ori_img.cols, ori_img.rows));
   // Wrap Mat into an ImageFrame.
   auto input_frame = absl::make_unique<mediapipe::ImageFrame>(
       mediapipe::ImageFormat::SRGB, img.cols, img.rows,
@@ -71,9 +90,10 @@ absl::Status MMPGraph::RunMPPGraph(const cv::Mat &img,
   MP_RETURN_IF_ERROR(graph.AddPacketToInputStream(
       kInputStream, mediapipe::Adopt(input_frame.release())
                         .At(mediapipe::Timestamp(frame_timestamp_us))));
-
+  LOG(INFO) << "Sent image packet into the graph.";
   mediapipe::Packet landmarks_packet;
   if (poller->Next(&landmarks_packet)) {
+    LOG(INFO) << "Get face landmarks from the graph.";
     auto &landmarks =
         landmarks_packet.Get<std::vector<mediapipe::NormalizedLandmarkList>>();
     for (const auto &landmark : landmarks) {
@@ -100,6 +120,7 @@ absl::Status MMPGraph::RunMPPGraph(const cv::Mat &img,
       faces.push_back(face);
     }
   }
+  LOG(INFO) << "Get face landmarks from the graph.";
 
   return absl::OkStatus();
 }

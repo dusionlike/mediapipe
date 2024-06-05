@@ -17,6 +17,7 @@
 
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
+#include "absl/strings/str_replace.h"
 #include "mediapipe/framework/calculator_framework.h"
 #include "mediapipe/framework/formats/image_frame.h"
 #include "mediapipe/framework/formats/image_frame_opencv.h"
@@ -40,9 +41,11 @@ std::string output_video_path;
 
 absl::Status RunMPPGraph() {
   std::string calculator_graph_config_contents;
-  MP_RETURN_IF_ERROR(mediapipe::file::GetContents(
-      "models/face_mesh_desktop_landmarks.pbtxt",
-      &calculator_graph_config_contents));
+  MP_RETURN_IF_ERROR(
+      mediapipe::file::GetContents("models/face_mesh_desktop_landmarks.pbtxt",
+                                   &calculator_graph_config_contents));
+  absl::StrReplaceAll({{"$FACE_MAX_NUM", std::to_string(1)}},
+                      &calculator_graph_config_contents);
   LOG(INFO) << "Get calculator graph config contents: "
             << calculator_graph_config_contents;
   mediapipe::CalculatorGraphConfig config =
