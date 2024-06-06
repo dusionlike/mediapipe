@@ -17,32 +17,29 @@ const int map_478_to_68[] = {
     78,  81,  13,  311, 308, 402, 14,  178  // 嘴巴
 };
 
-/**
- * 将图片转换为指定大小的正方形，并且保持原始图片的长宽比不变形，不足的地方用黑色填充
- */
-float resize_image(const cv::Mat &img, cv::Mat &output, int size) {
-  cv::Size target_size(size, size);
-  cv::Mat padded_img(target_size, img.type(), cv::Scalar(0));
-  float scale = std::min(static_cast<float>(target_size.width) / img.cols,
-                         static_cast<float>(target_size.height) / img.rows);
-  cv::Size new_size = cv::Size(img.cols * scale, img.rows * scale);
-  cv::Mat resized;
-  cv::resize(img, resized, new_size);
-  cv::Rect roi(0, 0, resized.cols, resized.rows);
-  resized.copyTo(padded_img(roi));
-  output = padded_img;
-  return scale;
-}
+// /**
+//  * 将图片转换为指定大小的正方形，并且保持原始图片的长宽比不变形，不足的地方用黑色填充
+//  */
+// float resize_image(const cv::Mat &img, cv::Mat &output, int size) {
+//   cv::Size target_size(size, size);
+//   cv::Mat padded_img(target_size, img.type(), cv::Scalar(0));
+//   float scale = std::min(static_cast<float>(target_size.width) / img.cols,
+//                          static_cast<float>(target_size.height) / img.rows);
+//   cv::Size new_size = cv::Size(img.cols * scale, img.rows * scale);
+//   cv::Mat resized;
+//   cv::resize(img, resized, new_size);
+//   cv::Rect roi(0, 0, resized.cols, resized.rows);
+//   resized.copyTo(padded_img(roi));
+//   output = padded_img;
+//   return scale;
+// }
+
+extern std::string calculator_graph_config_contents;
 
 MMPGraph::MMPGraph() {}
 MMPGraph::~MMPGraph() {}
 
 absl::Status MMPGraph::InitMPPGraph(int face_max_num) {
-  std::string calculator_graph_config_contents;
-  MP_RETURN_IF_ERROR(
-      mediapipe::file::GetContents("models/face_mesh_desktop_landmarks.pbtxt",
-                                   &calculator_graph_config_contents));
-
   // 修改配置文件中的最大人脸数
   absl::StrReplaceAll({{"$FACE_MAX_NUM", std::to_string(face_max_num)}},
                       &calculator_graph_config_contents);
@@ -86,8 +83,8 @@ absl::Status MMPGraph::ReleaseMPPGraph() {
 
 absl::Status MMPGraph::RunMPPGraph(const cv::Mat &ori_img,
                                    std::vector<FaceInfo> &faces) {
-  cv::Mat img;
-  resize_image(ori_img, img, std::max(ori_img.cols, ori_img.rows));
+  const cv::Mat &img = ori_img;
+  // resize_image(ori_img, img, std::max(ori_img.cols, ori_img.rows));
   // Wrap Mat into an ImageFrame.
   auto input_frame = absl::make_unique<mediapipe::ImageFrame>(
       mediapipe::ImageFormat::SRGB, img.cols, img.rows,
@@ -183,3 +180,77 @@ absl::Status MMPGraph::RunMPPGraph(const cv::Mat &ori_img,
 
   return absl::OkStatus();
 }
+
+std::string calculator_graph_config_contents = R"(
+# MediaPipe graph that performs face mesh with TensorFlow Lite on CPU.
+
+# Input image. (ImageFrame)
+input_stream: "input_video"
+
+# Output image with rendered results. (ImageFrame)
+output_stream: "output_video"
+output_stream: "face_count"
+output_stream: "face_rects_from_detections"
+output_stream: "face_detections"
+output_stream: "face_rects_from_landmarks"
+# Collection of detected/processed faces, each represented as a list of
+# landmarks. (std::vector<NormalizedLandmarkList>)
+output_stream: "multi_face_landmarks"
+
+# Throttles the images flowing downstream for flow control. It passes through
+# the very first incoming image unaltered, and waits for downstream nodes
+# (calculators and subgraphs) in the graph to finish their tasks before it
+# passes through another image. All images that come in while waiting are
+# dropped, limiting the number of in-flight images in most part of the graph to
+# 1. This prevents the downstream nodes from queuing up incoming images and data
+# excessively, which leads to increased latency and memory usage, unwanted in
+# real-time mobile applications. It also eliminates unnecessarily computation,
+# e.g., the output produced by a node may get dropped downstream if the
+# subsequent nodes are still busy processing previous inputs.
+node {
+  calculator: "FlowLimiterCalculator"
+  input_stream: "input_video"
+  input_stream: "FINISHED:output_video"
+  input_stream_info: {
+    tag_index: "FINISHED"
+    back_edge: true
+  }
+  output_stream: "throttled_input_video"
+}
+
+# Defines side packets for further use in the graph.
+node {
+  calculator: "ConstantSidePacketCalculator"
+  output_side_packet: "PACKET:0:num_faces"
+  output_side_packet: "PACKET:1:with_attention"
+  node_options: {
+    [type.googleapis.com/mediapipe.ConstantSidePacketCalculatorOptions]: {
+      packet { int_value: $FACE_MAX_NUM }
+      packet { bool_value: true }
+    }
+  }
+}
+
+# Subgraph that detects faces and corresponding landmarks.
+node {
+  calculator: "FaceLandmarkFrontCpu"
+  input_stream: "IMAGE:throttled_input_video"
+  input_side_packet: "NUM_FACES:num_faces"
+  input_side_packet: "WITH_ATTENTION:with_attention"
+  output_stream: "LANDMARKS:multi_face_landmarks"
+  output_stream: "ROIS_FROM_LANDMARKS:face_rects_from_landmarks"
+  output_stream: "DETECTIONS:face_detections"
+  output_stream: "ROIS_FROM_DETECTIONS:face_rects_from_detections"
+  output_stream: "FACE_COUNT_FROM_LANDMARKS:face_count"
+}
+
+# Subgraph that renders face-landmark annotation onto the input image.
+node {
+  calculator: "FaceRendererCpu"
+  input_stream: "IMAGE:throttled_input_video"
+  input_stream: "LANDMARKS:multi_face_landmarks"
+  input_stream: "NORM_RECTS:face_rects_from_landmarks"
+  input_stream: "DETECTIONS:face_detections"
+  output_stream: "IMAGE:output_video"
+}
+)";
