@@ -47,6 +47,8 @@ int releaseFaceLandmark() {
     error_message = run_status.message();
     return -1;
   }
+  delete graph;
+  graph = nullptr;
   return 0;
 }
 
