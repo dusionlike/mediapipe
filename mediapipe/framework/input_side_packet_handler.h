@@ -52,8 +52,6 @@ class InputSidePacketHandler {
 
   const PacketSet& InputSidePackets() const { return *input_side_packets_; }
 
-  void CacheInputSidePackets();
-
   // Returns true if the set of input-side-packets has changed since the
   // previous run.
   bool InputSidePacketsChanged();

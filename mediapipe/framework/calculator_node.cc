@@ -455,9 +455,10 @@ absl::Status ResendSidePackets(CalculatorContext* cc) {
   auto& outs = cc->OutputSidePackets();
   for (CollectionItemId id = outs.BeginId(); id < outs.EndId(); ++id) {
     Packet packet = GetPacket(outs.Get(id));
-    RET_CHECK(!packet.IsEmpty());
-    // OutputSidePacket::Set re-announces the side-packet to its mirrors.
-    outs.Get(id).Set(packet);
+    if (!packet.IsEmpty()) {
+      // OutputSidePacket::Set re-announces the side-packet to its mirrors.
+      outs.Get(id).Set(packet);
+    }
   }
   return absl::OkStatus();
 }
@@ -612,8 +613,6 @@ absl::Status CalculatorNode::CloseNode(const absl::Status& graph_status,
   if (!graph_run_ended) {
     CloseOutputStreams(outputs);
   }
-
-  input_side_packet_handler_.CacheInputSidePackets();
 
   {
     absl::MutexLock status_lock(&status_mutex_);

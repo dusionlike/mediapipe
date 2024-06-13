@@ -27,6 +27,7 @@ absl::Status InputSidePacketHandler::PrepareForRun(
     std::function<void()> input_side_packets_ready_callback,
     std::function<void(absl::Status)> error_callback) {
   int missing_input_side_packet_count;
+  prev_input_side_packets_ = std::move(input_side_packets_);
   ASSIGN_OR_RETURN(
       input_side_packets_,
       tool::FillPacketSet(*input_side_packet_types, all_side_packets,
@@ -39,10 +40,6 @@ absl::Status InputSidePacketHandler::PrepareForRun(
       std::move(input_side_packets_ready_callback);
   error_callback_ = std::move(error_callback);
   return absl::OkStatus();
-}
-
-void InputSidePacketHandler::CacheInputSidePackets() {
-  prev_input_side_packets_ = std::move(input_side_packets_);
 }
 
 bool InputSidePacketHandler::InputSidePacketsChanged() {
