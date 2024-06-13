@@ -25,8 +25,8 @@ int main() {
     auto start = cv::getTickCount();
     ret = getFaceLandmarkFormMat(frame, faces);
     auto end = cv::getTickCount();
-    std::cout << "Time: " << (end - start) / cv::getTickFrequency() << "s"
-              << std::endl;
+    std::cout << "Time: " << 1000 * (end - start) / cv::getTickFrequency()
+              << "ms" << std::endl;
 
     if (ret != 0) {
       std::cout << "Failed to get face landmark from Mat." << std::endl;
@@ -39,6 +39,14 @@ int main() {
     for (auto &face : faces) {
       for (auto &landmark : face.landmarks68) {
         cv::circle(frame, landmark, 2, cv::Scalar(0, 255, 0), -1);
+      }
+
+      for (auto &landmark : face.left_iris_landmarks) {
+        cv::circle(frame, landmark, 2, cv::Scalar(255, 0, 0), -1);
+      }
+
+      for (auto &landmark : face.right_iris_landmarks) {
+        cv::circle(frame, landmark, 2, cv::Scalar(255, 0, 0), -1);
       }
     }
 

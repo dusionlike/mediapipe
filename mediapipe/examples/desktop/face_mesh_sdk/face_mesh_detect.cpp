@@ -52,19 +52,10 @@ absl::Status MMPGraph::InitMPPGraph(int face_max_num) {
   LOG(INFO) << "Start running the calculator graph.";
   ASSIGN_OR_RETURN(auto face_count_poller,
                    graph.AddOutputStreamPoller("face_count"));
-  ASSIGN_OR_RETURN(auto face_detections_poller,
-                   graph.AddOutputStreamPoller("face_detections"));
-  ASSIGN_OR_RETURN(auto face_rects_poller,
-                   graph.AddOutputStreamPoller("face_rects_from_detections"));
-
   ASSIGN_OR_RETURN(auto face_landmarks_poller,
                    graph.AddOutputStreamPoller("multi_face_landmarks"));
   face_count_poller_ = absl::make_unique<mediapipe::OutputStreamPoller>(
       std::move(face_count_poller));
-  face_detections_poller_ = absl::make_unique<mediapipe::OutputStreamPoller>(
-      std::move(face_detections_poller));
-  face_rects_poller_ = absl::make_unique<mediapipe::OutputStreamPoller>(
-      std::move(face_rects_poller));
 
   face_landmarks_poller_ = absl::make_unique<mediapipe::OutputStreamPoller>(
       std::move(face_landmarks_poller));
@@ -105,60 +96,45 @@ absl::Status MMPGraph::RunMPPGraph(const cv::Mat &ori_img,
     }
   }
 
-  std::vector<cv::Rect2d> boxs;
-  std::vector<float> scores;
-
-  mediapipe::Packet face_detections_packet;
-  if (face_detections_poller_->Next(&face_detections_packet)) {
-    auto &detections =
-        face_detections_packet.Get<std::vector<mediapipe::Detection>>();
-    for (const auto &detection : detections) {
-      cv::Rect2d box(
-          detection.location_data().relative_bounding_box().xmin() * img.cols,
-          detection.location_data().relative_bounding_box().ymin() * img.rows,
-          detection.location_data().relative_bounding_box().width() * img.cols,
-          detection.location_data().relative_bounding_box().height() *
-              img.rows);
-      boxs.push_back(box);
-      scores.push_back(detection.score().Get(0));
-    }
-  }
-
-  std::vector<int> nms_result;
-  cv::dnn::NMSBoxes(boxs, scores, 0.5, 0.45, nms_result);
-
-  // 带角度的矩形框
-  std::vector<cv::RotatedRect> res_rois;
-
-  mediapipe::Packet face_rects_packet;
-  if (face_rects_poller_->Next(&face_rects_packet)) {
-    auto &rects =
-        face_rects_packet.Get<std::vector<mediapipe::NormalizedRect>>();
-    for (auto &&i : nms_result) {
-      auto rect = rects[i];
-      cv::RotatedRect roi(
-          cv::Point2f(rect.x_center() * img.cols, rect.y_center() * img.rows),
-          cv::Size2f(rect.width() * img.cols, rect.height() * img.rows),
-          rect.rotation());
-
-      res_rois.push_back(roi);
-    }
-  }
-
   mediapipe::Packet landmarks_packet;
   if (face_landmarks_poller_->Next(&landmarks_packet)) {
-    auto &landmarks =
+    const std::vector<mediapipe::NormalizedLandmarkList> &landmarks =
         landmarks_packet.Get<std::vector<mediapipe::NormalizedLandmarkList>>();
+
+    std::vector<std::vector<cv::Point2f>> cv_landmarks;
+
+    std::vector<cv::Rect2d> boxs;
+    std::vector<float> scores;
+
+    for (const auto &landmark : landmarks) {
+      cv::Rect2d box;
+      float score = 90;
+
+      std::vector<cv::Point2f> cv_landmark =
+          std::vector<cv::Point2f>(FACE_LANDMARKS);
+      for (size_t i = 0; i < FACE_LANDMARKS; i++) {
+        const auto &point = landmark.landmark(i);
+        cv_landmark[i] = cv::Point2f(point.x(), point.y());
+      }
+      cv_landmarks.push_back(cv_landmark);
+      box = cv::boundingRect(cv_landmark);
+      boxs.push_back(box);
+      scores.push_back(score);
+    }
+
+    std::vector<int> nms_result;
+    cv::dnn::NMSBoxes(boxs, scores, 0.5, 0.45, nms_result);
 
     for (auto &&i : nms_result) {
       FaceInfo face;
-      face.roi = res_rois[i];
+      auto res_roi = boxs[i];
+      face.roi = cv::Rect(res_roi.x * img.cols, res_roi.y * img.rows,
+                          res_roi.width * img.cols, res_roi.height * img.rows);
       face.score = scores[i];
-      auto landmark = landmarks[i];
-      for (size_t i = 0; i < landmark.landmark_size(); i++) {
-        const auto &point = landmark.landmark(i);
-        face.landmarks[i] =
-            cv::Point(point.x() * img.cols, point.y() * img.rows);
+      auto landmark = cv_landmarks[i];
+      for (size_t i = 0; i < FACE_LANDMARKS; i++) {
+        const auto &point = landmark[i];
+        face.landmarks[i] = cv::Point(point.x * img.cols, point.y * img.rows);
       }
 
       // 478 -> 68

@@ -6,11 +6,10 @@
 #endif
 
 struct FaceInfoC {
-  int center_x;
-  int center_y;
+  int x;
+  int y;
   int width;
   int height;
-  float angle;
   float score;
   int landmarks[478][2];
   int landmarks68[68][2];
