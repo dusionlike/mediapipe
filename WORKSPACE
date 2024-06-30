@@ -271,7 +271,13 @@ new_local_repository(
 new_local_repository(
     name = "windows_opencv",
     build_file = "@//third_party:opencv_windows.BUILD",
-    path = "C:\\opencv\\build",
+    path = "D:\\opencv454\\build",
+)
+
+new_local_repository(
+    name = "windows_opencv_x86",
+    build_file = "@//third_party:opencv_windows_x86.BUILD",
+    path = "D:\\opencv454\\build",
 )
 
 http_archive(

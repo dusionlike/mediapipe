@@ -144,9 +144,24 @@ config_setting(
     ]
 ]
 
-config_setting(
+alias(
     name = "windows",
+    actual = select({
+        ":windows_x64": ":windows_x64",
+        ":windows_x86": ":windows_x86",
+        "//conditions:default": ":windows_x64",  # Arbitrarily chosen from above.
+    }),
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
+    name = "windows_x64",
     values = {"cpu": "x64_windows"},
+)
+
+config_setting(
+    name = "windows_x86",
+    values = {"cpu": "x64_x86_windows"},
 )
 
 exports_files(

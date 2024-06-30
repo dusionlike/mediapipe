@@ -23,6 +23,11 @@ build:windows --copt=/w
 # For using M_* math constants on Windows with MSVC.
 build:windows --copt=/D_USE_MATH_DEFINES
 build:windows --host_copt=/D_USE_MATH_DEFINES
+# 在windows下编译时指定python路径
+build:windows --action_env PYTHON_BIN_PATH=D:/work/C/mediapipe/.conda/python.exe
+# 解决中文编译报错问题
+build:windows --copt=/utf-8
+build:windows --define MEDIAPIPE_DISABLE_GPU=1
 
 # macOS
 build:macos --cxxopt=-std=c++17

@@ -193,7 +193,8 @@ alias(
         "//mediapipe:android_arm64": "@android_opencv//:libopencv_arm64-v8a",
         "//mediapipe:ios": "@ios_opencv//:opencv",
         "//mediapipe:macos": "@macos_opencv//:opencv",
-        "//mediapipe:windows": "@windows_opencv//:opencv",
+        "//mediapipe:windows_x64": "@windows_opencv//:opencv",
+        "//mediapipe:windows_x86": "@windows_opencv_x86//:opencv",
         "//conditions:default": "@linux_opencv//:opencv",
     }),
 )
