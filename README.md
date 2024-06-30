@@ -4,6 +4,20 @@ title: Home
 nav_order: 1
 ---
 
+## 打包
+
+32位
+    
+```shell
+bazel build -c opt --cpu=x64_x86_windows mediapipe/examples/desktop/face_mesh_sdk:face_mesh_sdk --verbose_failures
+```
+
+64位
+
+```shell
+bazel build -c opt mediapipe/examples/desktop/face_mesh_sdk:face_mesh_sdk --verbose_failures
+```
+
 ![MediaPipe](https://mediapipe.dev/images/mediapipe_small.png)
 
 --------------------------------------------------------------------------------

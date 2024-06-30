@@ -1485,3 +1485,12 @@ cc_test(
         "@com_google_absl//absl/strings",
     ],
 )
+
+cc_library(
+    name = "global_model_path_map",
+    srcs = ["global_model_path_map.cc"],
+    hdrs = ["global_model_path_map.h"],
+    visibility = ["//visibility:public"],
+    deps = [],
+    alwayslink = True,
+)

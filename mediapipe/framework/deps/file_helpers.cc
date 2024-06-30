@@ -26,6 +26,7 @@
 
 #include <cerrno>
 
+#include "mediapipe/calculators/util/global_model_path_map.h"
 #include "mediapipe/framework/deps/file_path.h"
 #include "mediapipe/framework/port/canonical_errors.h"
 #include "mediapipe/framework/port/status.h"
@@ -138,8 +139,10 @@ class DirectoryListing {
 
 }  // namespace
 
-absl::Status GetContents(absl::string_view file_name, std::string* output,
+absl::Status GetContents(absl::string_view file_name_v, std::string* output,
                          bool read_as_binary) {
+  std::string file_name = std::string(file_name_v);
+  GlobalModelPathMap::GetRealModelPath(file_name);
   FILE* fp = fopen(file_name.data(), read_as_binary ? "rb" : "r");
   if (fp == NULL) {
     return mediapipe::InvalidArgumentErrorBuilder(MEDIAPIPE_LOC)

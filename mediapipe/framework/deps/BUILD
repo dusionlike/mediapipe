@@ -118,6 +118,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":file_path",
+        "//mediapipe/calculators/util:global_model_path_map",
         "//mediapipe/framework/port:status",
         "@com_google_absl//absl/strings",
     ],
