@@ -80,9 +80,9 @@ http_archive(
 # gflags needed by glog
 http_archive(
     name = "com_github_gflags_gflags",
-    strip_prefix = "gflags-2.2.2",
-    sha256 = "19713a36c9f32b33df59d1c79b4958434cb005b5b47dc5400a7a4b078111d9b5",
-    url = "https://github.com/gflags/gflags/archive/v2.2.2.zip",
+    strip_prefix = "gflags-c9cea258d613714d80a40a664736bd2b33cdc00e",
+    sha256 = "bbf43b268e9550a5edaee1345fe3ab09ad26bb69f306e696f752b3891baad7ab",
+    url = "https://github.com/dusionlike/gflags/archive/c9cea258d613714d80a40a664736bd2b33cdc00e.zip",
 )
 
 # 2020-08-21
@@ -457,12 +457,12 @@ http_archive(
 
 # TensorFlow repo should always go after the other external dependencies.
 # TF on 2022-08-10.
-_TENSORFLOW_GIT_COMMIT = "af1d5bc4fbb66d9e6cc1cf89503014a99233583b"
-_TENSORFLOW_SHA256 = "f85a5443264fc58a12d136ca6a30774b5bc25ceaf7d114d97f252351b3c3a2cb"
+_TENSORFLOW_GIT_COMMIT = "8e7252a0867f405faf54347843274c060c9d3437"
+_TENSORFLOW_SHA256 = "50e45dfe76f8bbe80e6dbe29f65b13093ae6e995ed7c25f1fcd0cd60a82a6f26"
 http_archive(
     name = "org_tensorflow",
     urls = [
-      "https://github.com/tensorflow/tensorflow/archive/%s.tar.gz" % _TENSORFLOW_GIT_COMMIT,
+      "https://github.com/dusionlike/tensorflow/archive/%s.tar.gz" % _TENSORFLOW_GIT_COMMIT,
     ],
     patches = [
         "@//third_party:org_tensorflow_compatibility_fixes.diff",

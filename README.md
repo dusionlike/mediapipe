@@ -1,21 +1,27 @@
----
-layout: default
-title: Home
-nav_order: 1
----
+# mediapipe 0.8.x
 
-## 打包
+support windows 32/64 bit
 
-32位
-    
+## build
+
+In Windows, you need to add the Python environment variable:
+
 ```shell
-bazel build -c opt --cpu=x64_x86_windows mediapipe/examples/desktop/face_mesh_sdk:face_mesh_sdk --verbose_failures
+setx PYTHON_BIN_PATH "path/to/python.exe"
 ```
 
-64位
+> Use "/" for the path.
+
+32 bit
+    
+```shell
+bazel build -c opt --cpu=x64_x86_windows mediapipe/examples/desktop/face_mesh_sdk:face_mesh_sdk
+```
+
+64 bit
 
 ```shell
-bazel build -c opt mediapipe/examples/desktop/face_mesh_sdk:face_mesh_sdk --verbose_failures
+bazel build -c opt mediapipe/examples/desktop/face_mesh_sdk:face_mesh_sdk
 ```
 
 ![MediaPipe](https://mediapipe.dev/images/mediapipe_small.png)
