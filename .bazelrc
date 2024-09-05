@@ -15,6 +15,11 @@ test --test_env="GTEST_INSTALL_FAILURE_SIGNAL_HANDLER=1"
 build:linux --cxxopt=-std=c++17
 build:linux --host_cxxopt=-std=c++17
 build:linux --copt=-w
+# Linux with GPU
+build:linux --define MEDIAPIPE_DISABLE_GPU=1
+# Linux with GPU
+build:linux --copt=-DMESA_EGL_NO_X11_HEADERS
+build:linux --copt=-DEGL_NO_X11
 
 # windows
 build:windows --cxxopt=/std:c++17
