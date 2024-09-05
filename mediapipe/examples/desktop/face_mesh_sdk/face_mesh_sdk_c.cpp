@@ -27,21 +27,21 @@ int getFaceLandmarkErrorMessages_C(char *message, int message_size) {
   return 0;
 }
 
-int initFaceLandmark_C(int face_max_num) {
-  return initFaceLandmarkWithModelPaths_C(nullptr, face_max_num);
+int initFaceLandmark_C(int num_faces, bool with_attention) {
+  return initFaceLandmarkWithModelPaths_C(nullptr, num_faces, with_attention);
 }
 
-int initFaceLandmarkWithModelPaths_C(const char **model_paths,
-                                     int face_max_num) {
+int initFaceLandmarkWithModelPaths_C(const char **model_paths, int num_faces,
+                                     bool with_attention) {
   try {
     if (model_paths == nullptr) {
-      initFaceLandmark(face_max_num);
+      initFaceLandmark(num_faces, with_attention);
     } else {
       std::vector<std::string> model_paths_vec;
       for (int i = 0; i < 2; i++) {
         model_paths_vec.push_back(model_paths[i]);
       }
-      initFaceLandmark(model_paths_vec, face_max_num);
+      initFaceLandmark(model_paths_vec, num_faces, with_attention);
     }
   } catch (const std::exception &e) {
     error_message = e.what();
@@ -61,7 +61,7 @@ int releaseFaceLandmark_C() {
 }
 
 int getFaceLandmark_C(const unsigned char *data, int data_size,
-                      FaceInfoC *faces_c, int *output_face_num) {
+                      FaceInfoC *faces_c, int *output_num_faces) {
   try {
     std::vector<uchar> buffer(data, data + data_size);
     cv::Mat img = cv::imdecode(buffer, cv::IMREAD_COLOR);
@@ -69,7 +69,7 @@ int getFaceLandmark_C(const unsigned char *data, int data_size,
     std::vector<FaceInfo> faces;
     getFaceLandmark(img, faces);
 
-    *output_face_num = faces.size();
+    *output_num_faces = faces.size();
     for (int i = 0; i < faces.size(); i++) {
       faces_c[i].x = faces[i].roi.x;
       faces_c[i].y = faces[i].roi.y;

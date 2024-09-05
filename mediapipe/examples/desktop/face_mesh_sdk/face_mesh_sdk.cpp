@@ -18,18 +18,19 @@
 
 MMPGraph *graph = nullptr;
 
-void initFaceLandmark(int face_max_num) {
-  return initFaceLandmark({}, face_max_num);
+void initFaceLandmark(int num_faces, bool with_attention) {
+  return initFaceLandmark({}, num_faces, with_attention);
 }
 
-void initFaceLandmark(std::vector<std::string> model_paths, int face_max_num) {
+void initFaceLandmark(std::vector<std::string> model_paths, int num_faces,
+                      bool with_attention) {
   google::InitGoogleLogging("FaceMeshDetectSDK");
   graph = new MMPGraph();
   absl::Status run_status;
   if (model_paths.size() == 0) {
-    run_status = graph->InitMPPGraph(face_max_num);
+    run_status = graph->InitMPPGraph(num_faces, with_attention);
   } else {
-    run_status = graph->InitMPPGraph(model_paths, face_max_num);
+    run_status = graph->InitMPPGraph(model_paths, num_faces, with_attention);
   }
   if (!run_status.ok()) {
     throw std::runtime_error(run_status.ToString());

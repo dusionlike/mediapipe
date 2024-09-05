@@ -18,14 +18,15 @@ struct FaceInfoC {
 #define EXPORT_SDK extern "C"
 #endif
 
-EXPORT_SDK int initFaceLandmark_C(int face_max_num);
+EXPORT_SDK int initFaceLandmark_C(int num_faces, bool with_attention);
 EXPORT_SDK int initFaceLandmarkWithModelPaths_C(const char **model_paths,
-                                                int face_max_num);
+                                                int num_faces,
+                                                bool with_attention);
 
 EXPORT_SDK int releaseFaceLandmark_C();
 
 EXPORT_SDK int getFaceLandmark_C(const unsigned char *data, int data_size,
-                                 FaceInfoC *faces_c, int *output_face_num);
+                                 FaceInfoC *faces_c, int *output_num_faces);
 
 EXPORT_SDK int getFaceLandmarkErrorMessages_C(char *message, int message_size);
 

@@ -5,8 +5,6 @@
 
 constexpr char kInputStream[] = "input_video";
 
-#define FACE_LANDMARKS 478
-
 const int map_478_to_68[] = {
     234, 93,  132, 58,  172, 136, 150, 176, 152, 400, 379, 365,
     397, 288, 361, 323, 454,                                     // 脸部边缘
@@ -38,28 +36,37 @@ const int map_478_to_68[] = {
 MMPGraph::MMPGraph() {}
 MMPGraph::~MMPGraph() {}
 
-absl::Status MMPGraph::InitMPPGraph(int face_max_num) {
+absl::Status MMPGraph::InitMPPGraph(int num_faces, bool with_attention) {
   std::vector<std::string> model_paths = {
       "models/face_detection_short_range.tflite",
-      "models/face_landmark_with_attention.tflite",
+      with_attention ? "models/face_landmark_with_attention.tflite"
+                     : "models/face_landmark.tflite",
   };
-  return InitMPPGraph(model_paths, face_max_num);
+  return InitMPPGraph(model_paths, num_faces, with_attention);
 }
 
 absl::Status MMPGraph::InitMPPGraph(std::vector<std::string> model_paths,
-                                    int face_max_num) {
+                                    int num_faces, bool with_attention) {
   if (model_paths.size() != 2) {
     return absl::InvalidArgumentError("model_paths should contain 2 elements");
   }
   mediapipe::GlobalModelPathMap::Add(
       "mediapipe/modules/face_detection/face_detection_short_range.tflite",
       model_paths[0]);
-  mediapipe::GlobalModelPathMap::Add(
-      "mediapipe/modules/face_landmark/face_landmark_with_attention.tflite",
-      model_paths[1]);
+  if (with_attention) {
+    mediapipe::GlobalModelPathMap::Add(
+        "mediapipe/modules/face_landmark/face_landmark_with_attention.tflite",
+        model_paths[1]);
+  } else {
+    mediapipe::GlobalModelPathMap::Add(
+        "mediapipe/modules/face_landmark/face_landmark.tflite", model_paths[1]);
+  }
 
   // 修改配置文件中的最大人脸数
-  absl::StrReplaceAll({{"$FACE_MAX_NUM", std::to_string(face_max_num)}},
+  absl::StrReplaceAll({{"$NUM_FACES", std::to_string(num_faces)}},
+                      &calculator_graph_config_contents);
+  // 修改配置中的是否使用注意力模型
+  absl::StrReplaceAll({{"$WITH_ATTENTION", with_attention ? "true" : "false"}},
                       &calculator_graph_config_contents);
 
   mediapipe::CalculatorGraphConfig config =
@@ -119,9 +126,11 @@ absl::Status MMPGraph::RunMPPGraph(const cv::Mat &ori_img,
       cv::Rect box;
       float score = 90;
 
+      int landmark_size = landmark.landmark_size();
+
       std::vector<cv::Point> cv_landmark =
-          std::vector<cv::Point>(FACE_LANDMARKS);
-      for (size_t i = 0; i < FACE_LANDMARKS; i++) {
+          std::vector<cv::Point>(landmark_size);
+      for (size_t i = 0; i < landmark_size; i++) {
         const auto &point = landmark.landmark(i);
         cv_landmark[i] = cv::Point(point.x() * img.cols, point.y() * img.rows);
       }
@@ -139,7 +148,7 @@ absl::Status MMPGraph::RunMPPGraph(const cv::Mat &ori_img,
       face.roi = boxs[i];
       face.score = scores[i];
       auto landmark = cv_landmarks[i];
-      for (size_t i = 0; i < FACE_LANDMARKS; i++) {
+      for (size_t i = 0; i < landmark.size(); i++) {
         face.landmarks[i] = landmark[i];
       }
 

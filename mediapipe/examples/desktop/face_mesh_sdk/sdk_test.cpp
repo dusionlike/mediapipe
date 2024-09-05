@@ -4,7 +4,7 @@
 
 int main() {
   try {
-    initFaceLandmark(1);
+    initFaceLandmark(1, false);
 
     cv::VideoCapture cap(0);
     if (!cap.isOpened()) {
