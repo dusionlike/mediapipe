@@ -66,8 +66,8 @@ node {
   output_side_packet: "PACKET:1:with_attention"
   node_options: {
     [type.googleapis.com/mediapipe.ConstantSidePacketCalculatorOptions]: {
-      packet { int_value: $FACE_MAX_NUM }
-      packet { bool_value: true }
+      packet { int_value: $NUM_FACES }
+      packet { bool_value: $WITH_ATTENTION }
     }
   }
 }
@@ -99,8 +99,9 @@ node {
   MMPGraph();
   ~MMPGraph();
 
-  absl::Status InitMPPGraph(int face_max_num);
-  absl::Status InitMPPGraph(std::vector<std::string> model_paths, int face_max_num);
+  absl::Status InitMPPGraph(int num_faces, bool with_attention);
+  absl::Status InitMPPGraph(std::vector<std::string> model_paths, int num_faces,
+                            bool with_attention);
 
   absl::Status ReleaseMPPGraph();
 
