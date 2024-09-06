@@ -45,6 +45,38 @@ cc_binary(
 )
 
 cc_binary(
+    name = "sdk_test",
+    srcs = [
+        "hair_segmentation.cpp",
+        "hair_segmentation.h",
+        "hair_segmentation_sdk.cpp",
+        "hair_segmentation_sdk.h",
+        "sdk_test.cpp",
+    ],
+    data = ["//mediapipe/models:hair_segmentation.tflite"],
+    deps = [
+        "//mediapipe/framework:calculator_framework",
+        "//mediapipe/framework/formats:image_frame",
+        "//mediapipe/framework/formats:image_frame_opencv",
+        "//mediapipe/framework/port:file_helpers",
+        "//mediapipe/framework/port:opencv_highgui",
+        "//mediapipe/framework/port:opencv_imgproc",
+        "//mediapipe/framework/port:opencv_video",
+        "//mediapipe/framework/port:parse_text_proto",
+        "//mediapipe/framework/port:status",
+        "@com_google_absl//absl/flags:flag",
+        "@com_google_absl//absl/flags:parse",
+    ] + select({
+        "//mediapipe/gpu:disable_gpu": [
+            "//mediapipe/graphs/hair_segmentation:desktop_calculators",
+        ],
+        "//conditions:default": [
+            "//mediapipe/graphs/hair_segmentation:mobile_calculators",
+        ],
+    }),
+)
+
+cc_binary(
     name = "hair_segmentation_sdk",
     srcs = [
         "hair_segmentation.cpp",

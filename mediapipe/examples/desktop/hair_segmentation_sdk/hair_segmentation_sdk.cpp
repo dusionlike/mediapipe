@@ -53,3 +53,12 @@ int getHairMask(const cv::Mat &img, cv::Mat &mask) {
   }
   return 0;
 }
+
+int getHairMaskByImageMode(const cv::Mat &img, cv::Mat &mask) {
+  absl::Status run_status = graph->RunMPPGraphByImageMode(img, mask);
+  if (!run_status.ok()) {
+    last_error_message = run_status.ToString();
+    return run_status.raw_code();
+  }
+  return 0;
+}

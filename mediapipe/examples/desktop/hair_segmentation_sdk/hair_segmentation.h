@@ -26,7 +26,7 @@ class MMPGraph {
 
 # Images on CPU coming into and out of the graph.
 input_stream: "input_video"
-output_stream: "output_video"
+output_stream: "hair_mask"
 
 # Throttles the images flowing downstream for flow control. It passes through
 # the very first incoming image unaltered, and waits for
@@ -118,7 +118,6 @@ node {
   output_side_packet: "op_resolver"
   node_options: {
     [type.googleapis.com/mediapipe.TfLiteCustomOpResolverCalculatorOptions] {
-      use_gpu: false
     }
   }
 }
@@ -134,7 +133,6 @@ node {
   node_options: {
     [type.googleapis.com/mediapipe.TfLiteInferenceCalculatorOptions] {
       model_path: "mediapipe/models/hair_segmentation.tflite"
-      use_gpu: false
     }
   }
 }
@@ -155,20 +153,6 @@ node {
       tensor_channels: 2
       combine_with_previous_ratio: 0.9
       output_layer_index: 1
-    }
-  }
-}
-
-# Colors the hair segmentation with the color specified in the option.
-node {
-  calculator: "RecolorCalculator"
-  input_stream: "IMAGE:throttled_input_video"
-  input_stream: "MASK:hair_mask"
-  output_stream: "IMAGE:output_video"
-  node_options: {
-    [type.googleapis.com/mediapipe.RecolorCalculatorOptions] {
-      color { r: 0 g: 0 b: 255 }
-      mask_channel: RED
     }
   }
 }
