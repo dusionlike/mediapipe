@@ -1,5 +1,6 @@
-#include "absl/strings/str_replace.h"
 #include "hair_segmentation.h"
+
+#include "absl/strings/str_replace.h"
 #include "mediapipe/calculators/util/global_model_path_map.h"
 
 constexpr char kInputStream[] = "input_video";
@@ -43,6 +44,19 @@ absl::Status MMPGraph::ReleaseMPPGraph() {
   return absl::OkStatus();
 }
 
+absl::Status MMPGraph::RunMPPGraphByImageMode(const cv::Mat& ori_img,
+                                              cv::Mat& output_mask) {
+  if (graph.GraphInputStreamsClosed()) {
+    MP_RETURN_IF_ERROR(graph.StartRun({}));
+  }
+
+  auto res = RunMPPGraph(ori_img, output_mask);
+
+  MP_RETURN_IF_ERROR(graph.CloseAllInputStreams());
+
+  return res;
+}
+
 absl::Status MMPGraph::RunMPPGraph(const cv::Mat& ori_img,
                                    cv::Mat& output_mask) {
   cv::Mat img;
@@ -71,7 +85,6 @@ absl::Status MMPGraph::RunMPPGraph(const cv::Mat& ori_img,
   MP_RETURN_IF_ERROR(graph.AddPacketToInputStream(
       kInputStream, mediapipe::Adopt(input_frame.release())
                         .At(mediapipe::Timestamp(frame_timestamp_us))));
-
 
   mediapipe::Packet mask_packet;
   if (mask_poller_->Next(&mask_packet) && !mask_packet.IsEmpty()) {
