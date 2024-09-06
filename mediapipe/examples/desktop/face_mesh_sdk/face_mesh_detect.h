@@ -95,4 +95,5 @@ node {
   absl::Status ReleaseMPPGraph();
 
   absl::Status RunMPPGraph(const cv::Mat &img, std::vector<FaceInfo> &faces);
+  absl::Status RunMPPGraphByImageMode(const cv::Mat &img, std::vector<FaceInfo> &faces);
 };

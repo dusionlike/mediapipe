@@ -9,13 +9,18 @@
 #define EXPORT_SDK extern
 #endif
 
-EXPORT_SDK void initFaceLandmark(int num_faces, bool with_attention);
-EXPORT_SDK void initFaceLandmark(std::vector<std::string> model_paths,
+EXPORT_SDK std::string getFaceLandmarkErrorMessages();
+
+EXPORT_SDK int initFaceLandmark(int num_faces, bool with_attention);
+EXPORT_SDK int initFaceLandmark(std::vector<std::string> model_paths,
                                  int num_faces, bool with_attention);
 
-EXPORT_SDK void releaseFaceLandmark();
+EXPORT_SDK int releaseFaceLandmark();
 
-EXPORT_SDK void getFaceLandmark(const cv::Mat &img,
+EXPORT_SDK int getFaceLandmark(const cv::Mat &img,
+                                std::vector<FaceInfo> &faces);
+
+EXPORT_SDK int getFaceLandmarkByImageMode(const cv::Mat &img,
                                 std::vector<FaceInfo> &faces);
 
 #undef EXPORT_SDK
