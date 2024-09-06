@@ -10,7 +10,7 @@
 struct FaceInfo {
   cv::Rect roi;
   float score;
-  std::vector<cv::Point> landmarks;
+  std::vector<cv::Point3f> landmarks;
   std::vector<cv::Point> landmarks68;
   std::vector<cv::Point> left_iris_landmarks;
   std::vector<cv::Point> right_iris_landmarks;
