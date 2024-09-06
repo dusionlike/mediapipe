@@ -30,7 +30,6 @@ class MMPGraph {
 input_stream: "input_video"
 
 # Output image with rendered results. (ImageFrame)
-output_stream: "output_video"
 output_stream: "face_rects_from_detections"
 output_stream: "face_detections"
 output_stream: "face_rects_from_landmarks"
@@ -51,7 +50,7 @@ output_stream: "multi_face_landmarks"
 node {
   calculator: "FlowLimiterCalculator"
   input_stream: "input_video"
-  input_stream: "FINISHED:output_video"
+  input_stream: "FINISHED:multi_face_landmarks"
   input_stream_info: {
     tag_index: "FINISHED"
     back_edge: true
@@ -82,16 +81,6 @@ node {
   output_stream: "ROIS_FROM_LANDMARKS:face_rects_from_landmarks"
   output_stream: "DETECTIONS:face_detections"
   output_stream: "ROIS_FROM_DETECTIONS:face_rects_from_detections"
-}
-
-# Subgraph that renders face-landmark annotation onto the input image.
-node {
-  calculator: "FaceRendererCpu"
-  input_stream: "IMAGE:throttled_input_video"
-  input_stream: "LANDMARKS:multi_face_landmarks"
-  input_stream: "NORM_RECTS:face_rects_from_landmarks"
-  input_stream: "DETECTIONS:face_detections"
-  output_stream: "IMAGE:output_video"
 }
 )";
 
