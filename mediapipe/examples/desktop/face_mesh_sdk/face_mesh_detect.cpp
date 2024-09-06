@@ -131,6 +131,7 @@ absl::Status MMPGraph::RunMPPGraph(const cv::Mat &ori_img,
         landmarks_packet.Get<std::vector<mediapipe::NormalizedLandmarkList>>();
 
     std::vector<std::vector<cv::Point>> cv_landmarks;
+    std::vector<std::vector<cv::Point3f>> cv_landmarks_3d;
 
     std::vector<cv::Rect> boxs;
     std::vector<float> scores;
@@ -141,13 +142,15 @@ absl::Status MMPGraph::RunMPPGraph(const cv::Mat &ori_img,
 
       int landmark_size = landmark.landmark_size();
 
-      std::vector<cv::Point> cv_landmark =
-          std::vector<cv::Point>(landmark_size);
+      std::vector<cv::Point> cv_landmark(landmark_size);
+      std::vector<cv::Point3f> cv_landmark_3d(landmark_size);
       for (size_t i = 0; i < landmark_size; i++) {
         const auto &point = landmark.landmark(i);
         cv_landmark[i] = cv::Point(point.x() * img.cols, point.y() * img.rows);
+        cv_landmark_3d[i] = cv::Point3f(point.x(), point.y(), point.z());
       }
       cv_landmarks.push_back(cv_landmark);
+      cv_landmarks_3d.push_back(cv_landmark_3d);
       box = cv::boundingRect(cv_landmark);
       boxs.push_back(box);
       scores.push_back(score);
@@ -161,20 +164,21 @@ absl::Status MMPGraph::RunMPPGraph(const cv::Mat &ori_img,
       face.roi = boxs[i];
       face.score = scores[i];
       auto landmark = cv_landmarks[i];
+      auto landmark_3d = cv_landmarks_3d[i];
       for (size_t i = 0; i < landmark.size(); i++) {
-        face.landmarks[i] = landmark[i];
+        face.landmarks[i] = landmark_3d[i];
       }
 
       // 478 -> 68
       for (int i = 0; i < 68; ++i) {
-        face.landmarks68[i] = face.landmarks[map_478_to_68[i]];
+        face.landmarks68[i] = landmark[map_478_to_68[i]];
       }
 
       for (size_t i = 468; i < 5; i++) {
-        face.left_iris_landmarks[i] = face.landmarks[i];
+        face.left_iris_landmarks[i] = landmark[i];
       }
       for (size_t i = 473; i < 5; i++) {
-        face.right_iris_landmarks[i] = face.landmarks[i];
+        face.right_iris_landmarks[i] = landmark[i];
       }
 
       faces.push_back(face);
