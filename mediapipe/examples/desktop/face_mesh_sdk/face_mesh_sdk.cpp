@@ -16,14 +16,18 @@
 #include "mediapipe/framework/port/parse_text_proto.h"
 #include "mediapipe/framework/port/status.h"
 
-MMPGraph *graph = nullptr;
+static MMPGraph *graph = nullptr;
 
-void initFaceLandmark(int num_faces, bool with_attention) {
+static std::string error_message;
+
+std::string getFaceLandmarkErrorMessages() { return error_message; }
+
+int initFaceLandmark(int num_faces, bool with_attention) {
   return initFaceLandmark({}, num_faces, with_attention);
 }
 
-void initFaceLandmark(std::vector<std::string> model_paths, int num_faces,
-                      bool with_attention) {
+int initFaceLandmark(std::vector<std::string> model_paths, int num_faces,
+                     bool with_attention) {
   google::InitGoogleLogging("FaceMeshDetectSDK");
   graph = new MMPGraph();
   absl::Status run_status;
@@ -33,23 +37,39 @@ void initFaceLandmark(std::vector<std::string> model_paths, int num_faces,
     run_status = graph->InitMPPGraph(model_paths, num_faces, with_attention);
   }
   if (!run_status.ok()) {
-    throw std::runtime_error(run_status.ToString());
+    error_message = run_status.ToString();
+    return run_status.raw_code();
   }
+  return 0;
 }
 
-void releaseFaceLandmark() {
+int releaseFaceLandmark() {
   google::ShutdownGoogleLogging();
   absl::Status run_status = graph->ReleaseMPPGraph();
-  if (!run_status.ok()) {
-    throw std::runtime_error(run_status.ToString());
-  }
   delete graph;
   graph = nullptr;
+  if (!run_status.ok()) {
+    error_message = run_status.ToString();
+    return run_status.raw_code();
+  }
+  return 0;
 }
 
-void getFaceLandmark(const cv::Mat &img, std::vector<FaceInfo> &faces) {
+int getFaceLandmark(const cv::Mat &img, std::vector<FaceInfo> &faces) {
   absl::Status run_status = graph->RunMPPGraph(img, faces);
   if (!run_status.ok()) {
-    throw std::runtime_error(run_status.ToString());
+    error_message = run_status.ToString();
+    return run_status.raw_code();
   }
+  return 0;
+}
+
+int getFaceLandmarkByImageMode(const cv::Mat &img,
+                               std::vector<FaceInfo> &faces) {
+  absl::Status run_status = graph->RunMPPGraphByImageMode(img, faces);
+  if (!run_status.ok()) {
+    error_message = run_status.ToString();
+    return run_status.raw_code();
+  }
+  return 0;
 }

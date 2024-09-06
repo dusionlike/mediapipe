@@ -92,6 +92,19 @@ absl::Status MMPGraph::ReleaseMPPGraph() {
   return absl::OkStatus();
 }
 
+absl::Status MMPGraph::RunMPPGraphByImageMode(const cv::Mat &img,
+                                              std::vector<FaceInfo> &faces) {
+  if (graph.GraphInputStreamsClosed()) {
+    MP_RETURN_IF_ERROR(graph.StartRun({}));
+  }
+
+  auto res = RunMPPGraph(img, faces);
+
+  MP_RETURN_IF_ERROR(graph.CloseAllInputStreams());
+
+  return res;
+}
+
 absl::Status MMPGraph::RunMPPGraph(const cv::Mat &ori_img,
                                    std::vector<FaceInfo> &faces) {
   cv::Mat img;
