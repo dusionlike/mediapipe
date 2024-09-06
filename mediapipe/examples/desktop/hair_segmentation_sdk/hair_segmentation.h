@@ -5,12 +5,8 @@
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "mediapipe/framework/calculator_framework.h"
-#include "mediapipe/framework/formats/classification.pb.h"
-#include "mediapipe/framework/formats/detection.pb.h"
 #include "mediapipe/framework/formats/image_frame.h"
 #include "mediapipe/framework/formats/image_frame_opencv.h"
-#include "mediapipe/framework/formats/landmark.pb.h"
-#include "mediapipe/framework/formats/rect.pb.h"
 #include "mediapipe/framework/port/file_helpers.h"
 #include "mediapipe/framework/port/opencv_highgui_inc.h"
 #include "mediapipe/framework/port/opencv_imgproc_inc.h"
@@ -187,5 +183,7 @@ node {
 
   absl::Status ReleaseMPPGraph();
 
-  absl::Status RunMPPGraph(const cv::Mat &img, cv::Mat &output_mask);
+  absl::Status RunMPPGraph(const cv::Mat& img, cv::Mat& output_mask);
+  absl::Status RunMPPGraphByImageMode(const cv::Mat& ori_img,
+                                      cv::Mat& output_mask);
 };
