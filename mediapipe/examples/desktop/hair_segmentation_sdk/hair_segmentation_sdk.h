@@ -16,5 +16,6 @@ EXPORT_SDK int initHairSeg(std::vector<std::string> model_paths);
 EXPORT_SDK int releaseHairSeg();
 
 EXPORT_SDK int getHairMask(const cv::Mat &img, cv::Mat &mask);
+EXPORT_SDK int getHairMaskByImageMode(const cv::Mat &img, cv::Mat &mask);
 
 #undef EXPORT_SDK

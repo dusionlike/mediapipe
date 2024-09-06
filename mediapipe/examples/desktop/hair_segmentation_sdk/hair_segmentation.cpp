@@ -10,7 +10,7 @@ MMPGraph::~MMPGraph() {}
 
 absl::Status MMPGraph::InitMPPGraph() {
   std::vector<std::string> model_paths = {
-      "hair_segmentation.tflite",
+      "models/hair_segmentation.tflite",
   };
   return InitMPPGraph(model_paths);
 }
@@ -62,15 +62,6 @@ absl::Status MMPGraph::RunMPPGraph(const cv::Mat& ori_img,
   cv::Mat img;
   cv::cvtColor(ori_img, img, cv::COLOR_BGR2RGB);
 
-  // resize为512x512，不足部分用白色填充
-  float scale = 512.0 / std::max(img.cols, img.rows);
-  cv::Mat resized_img;
-  cv::resize(img, resized_img, cv::Size(), scale, scale);
-  cv::Mat white_img = cv::Mat::ones(512, 512, CV_8UC3) * 255;
-  cv::Rect roi((512 - resized_img.cols) / 2, (512 - resized_img.rows) / 2,
-               resized_img.cols, resized_img.rows);
-  resized_img.copyTo(white_img(roi));
-
   // resize_image(ori_img, img, std::max(ori_img.cols, ori_img.rows));
   // Wrap Mat into an ImageFrame.
   auto input_frame = absl::make_unique<mediapipe::ImageFrame>(
@@ -91,8 +82,8 @@ absl::Status MMPGraph::RunMPPGraph(const cv::Mat& ori_img,
     auto& mask = mask_packet.Get<mediapipe::ImageFrame>();
     // 8UC4
     cv::Mat hair_mask = mediapipe::formats::MatView(&mask);
-    // 截取原图部分
-    hair_mask = hair_mask(roi);
+    // 只取第一个通道
+    cv::extractChannel(hair_mask, hair_mask, 0);
     // 恢复原图大小
     cv::resize(hair_mask, output_mask, ori_img.size());
   }
