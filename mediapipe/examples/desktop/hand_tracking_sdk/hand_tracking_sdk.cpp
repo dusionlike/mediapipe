@@ -18,39 +18,55 @@
 #include "mediapipe/framework/port/parse_text_proto.h"
 #include "mediapipe/framework/port/status.h"
 
-MMPGraph *graph = nullptr;
+static HandTrackingMMPGraph *graph = nullptr;
 
-void initHandTracking() {
-  initHandTracking({});
-}
+static std::string last_error_message;
 
-void initHandTracking(std::vector<std::string> model_paths) {
-  google::InitGoogleLogging("HandTrackingSDK");
-  graph = new MMPGraph();
-   absl::Status run_status;
+std::string getHandTrackingErrorMessages() { return last_error_message; }
+
+int initHandTracking() { initHandTracking({}); }
+
+int initHandTracking(std::vector<std::string> model_paths) {
+  graph = new HandTrackingMMPGraph();
+  absl::Status run_status;
   if (model_paths.size() == 0) {
     run_status = graph->InitMPPGraph();
   } else {
     run_status = graph->InitMPPGraph(model_paths);
   }
   if (!run_status.ok()) {
-    throw std::runtime_error(run_status.ToString());
+    last_error_message = run_status.ToString();
+    return run_status.raw_code();
   }
+  return 0;
 }
 
-void releaseHandTracking() {
-  google::ShutdownGoogleLogging();
+int releaseHandTracking() {
   absl::Status run_status = graph->ReleaseMPPGraph();
-  if (!run_status.ok()) {
-    throw std::runtime_error(run_status.ToString());
-  }
   delete graph;
   graph = nullptr;
+  if (!run_status.ok()) {
+    last_error_message = run_status.ToString();
+    return run_status.raw_code();
+  }
+  return 0;
 }
 
-void getHandLandmark(const cv::Mat &img, std::vector<HandInfo> &hands) {
+int getHandLandmark(const cv::Mat &img, std::vector<HandInfo> &hands) {
   absl::Status run_status = graph->RunMPPGraph(img, hands);
   if (!run_status.ok()) {
-    throw std::runtime_error(run_status.ToString());
+    last_error_message = run_status.ToString();
+    return run_status.raw_code();
   }
+  return 0;
+}
+
+int getHandLandmarkByImageMode(const cv::Mat &img,
+                               std::vector<HandInfo> &hands) {
+  absl::Status run_status = graph->RunMPPGraphByImageMode(img, hands);
+  if (!run_status.ok()) {
+    last_error_message = run_status.ToString();
+    return run_status.raw_code();
+  }
+  return 0;
 }

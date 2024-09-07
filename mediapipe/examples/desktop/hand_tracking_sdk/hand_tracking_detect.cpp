@@ -5,10 +5,10 @@
 
 constexpr char kInputStream[] = "input_video";
 
-MMPGraph::MMPGraph() {}
-MMPGraph::~MMPGraph() {}
+HandTrackingMMPGraph::HandTrackingMMPGraph() {}
+HandTrackingMMPGraph::~HandTrackingMMPGraph() {}
 
-absl::Status MMPGraph::InitMPPGraph() {
+absl::Status HandTrackingMMPGraph::InitMPPGraph() {
   std::vector<std::string> model_paths = {
       "models/palm_detection_full.tflite",
       "models/hand_landmark_full.tflite",
@@ -17,7 +17,8 @@ absl::Status MMPGraph::InitMPPGraph() {
   return InitMPPGraph(model_paths);
 }
 
-absl::Status MMPGraph::InitMPPGraph(std::vector<std::string> model_paths) {
+absl::Status HandTrackingMMPGraph::InitMPPGraph(
+    std::vector<std::string> model_paths) {
   if (model_paths.size() != 3) {
     return absl::InvalidArgumentError("model_paths should contain 3 elements");
   }
@@ -28,8 +29,7 @@ absl::Status MMPGraph::InitMPPGraph(std::vector<std::string> model_paths) {
       "mediapipe/modules/hand_landmark/hand_landmark_full.tflite",
       model_paths[1]);
   mediapipe::GlobalModelPathMap::Add(
-      "mediapipe/modules/hand_landmark/handedness.txt",
-      model_paths[2]);
+      "mediapipe/modules/hand_landmark/handedness.txt", model_paths[2]);
 
   mediapipe::CalculatorGraphConfig config =
       mediapipe::ParseTextProtoOrDie<mediapipe::CalculatorGraphConfig>(
@@ -51,15 +51,28 @@ absl::Status MMPGraph::InitMPPGraph(std::vector<std::string> model_paths) {
   return absl::OkStatus();
 }
 
-absl::Status MMPGraph::ReleaseMPPGraph() {
+absl::Status HandTrackingMMPGraph::ReleaseMPPGraph() {
   MP_RETURN_IF_ERROR(graph.CloseAllInputStreams());
   MP_RETURN_IF_ERROR(graph.CloseAllPacketSources());
   MP_RETURN_IF_ERROR(graph.WaitUntilDone());
   return absl::OkStatus();
 }
 
-absl::Status MMPGraph::RunMPPGraph(const cv::Mat& ori_img,
-                                   std::vector<HandInfo>& hands) {
+absl::Status HandTrackingMMPGraph::RunMPPGraphByImageMode(
+    const cv::Mat& ori_img, std::vector<HandInfo>& hands) {
+  auto res = RunMPPGraph(ori_img, hands);
+
+  MP_RETURN_IF_ERROR(graph.CloseAllInputStreams());
+
+  return res;
+}
+
+absl::Status HandTrackingMMPGraph::RunMPPGraph(const cv::Mat& ori_img,
+                                               std::vector<HandInfo>& hands) {
+  if (graph.GraphInputStreamsClosed()) {
+    MP_RETURN_IF_ERROR(graph.StartRun({}));
+  }
+
   cv::Mat img;
   cv::cvtColor(ori_img, img, cv::COLOR_BGR2RGB);
   // resize_image(ori_img, img, std::max(ori_img.cols, ori_img.rows));

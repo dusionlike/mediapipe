@@ -5,17 +5,18 @@
 
 constexpr char kInputStream[] = "input_video";
 
-MMPGraph::MMPGraph() {}
-MMPGraph::~MMPGraph() {}
+HairSegMMPGraph::HairSegMMPGraph() {}
+HairSegMMPGraph::~HairSegMMPGraph() {}
 
-absl::Status MMPGraph::InitMPPGraph() {
+absl::Status HairSegMMPGraph::InitMPPGraph() {
   std::vector<std::string> model_paths = {
       "models/hair_segmentation.tflite",
   };
   return InitMPPGraph(model_paths);
 }
 
-absl::Status MMPGraph::InitMPPGraph(std::vector<std::string> model_paths) {
+absl::Status HairSegMMPGraph::InitMPPGraph(
+    std::vector<std::string> model_paths) {
   if (model_paths.size() != 1) {
     return absl::InvalidArgumentError("model_paths should contain 1 elements");
   }
@@ -37,19 +38,15 @@ absl::Status MMPGraph::InitMPPGraph(std::vector<std::string> model_paths) {
   return absl::OkStatus();
 }
 
-absl::Status MMPGraph::ReleaseMPPGraph() {
+absl::Status HairSegMMPGraph::ReleaseMPPGraph() {
   MP_RETURN_IF_ERROR(graph.CloseAllInputStreams());
   MP_RETURN_IF_ERROR(graph.CloseAllPacketSources());
   MP_RETURN_IF_ERROR(graph.WaitUntilDone());
   return absl::OkStatus();
 }
 
-absl::Status MMPGraph::RunMPPGraphByImageMode(const cv::Mat& ori_img,
-                                              cv::Mat& output_mask) {
-  if (graph.GraphInputStreamsClosed()) {
-    MP_RETURN_IF_ERROR(graph.StartRun({}));
-  }
-
+absl::Status HairSegMMPGraph::RunMPPGraphByImageMode(const cv::Mat& ori_img,
+                                                     cv::Mat& output_mask) {
   auto res = RunMPPGraph(ori_img, output_mask);
 
   MP_RETURN_IF_ERROR(graph.CloseAllInputStreams());
@@ -57,8 +54,12 @@ absl::Status MMPGraph::RunMPPGraphByImageMode(const cv::Mat& ori_img,
   return res;
 }
 
-absl::Status MMPGraph::RunMPPGraph(const cv::Mat& ori_img,
-                                   cv::Mat& output_mask) {
+absl::Status HairSegMMPGraph::RunMPPGraph(const cv::Mat& ori_img,
+                                          cv::Mat& output_mask) {
+  if (graph.GraphInputStreamsClosed()) {
+    MP_RETURN_IF_ERROR(graph.StartRun({}));
+  }
+
   cv::Mat img;
   cv::cvtColor(ori_img, img, cv::COLOR_BGR2RGB);
 

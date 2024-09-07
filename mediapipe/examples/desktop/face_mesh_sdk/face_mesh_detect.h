@@ -18,7 +18,7 @@
 #include "mediapipe/framework/port/status.h"
 #include "types.h"
 
-class MMPGraph {
+class FaceMeshMMPGraph {
  private:
   mediapipe::CalculatorGraph graph;
   std::unique_ptr<mediapipe::OutputStreamPoller> face_landmarks_poller_;
@@ -85,8 +85,8 @@ node {
 )";
 
  public:
-  MMPGraph();
-  ~MMPGraph();
+  FaceMeshMMPGraph();
+  ~FaceMeshMMPGraph();
 
   absl::Status InitMPPGraph(int num_faces, bool with_attention);
   absl::Status InitMPPGraph(std::vector<std::string> model_paths, int num_faces,
@@ -95,5 +95,6 @@ node {
   absl::Status ReleaseMPPGraph();
 
   absl::Status RunMPPGraph(const cv::Mat &img, std::vector<FaceInfo> &faces);
-  absl::Status RunMPPGraphByImageMode(const cv::Mat &img, std::vector<FaceInfo> &faces);
+  absl::Status RunMPPGraphByImageMode(const cv::Mat &img,
+                                      std::vector<FaceInfo> &faces);
 };

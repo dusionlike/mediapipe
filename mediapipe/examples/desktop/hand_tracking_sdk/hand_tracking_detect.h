@@ -19,7 +19,7 @@
 #include "mediapipe/framework/port/status.h"
 #include "types.h"
 
-class MMPGraph {
+class HandTrackingMMPGraph {
  private:
   mediapipe::CalculatorGraph graph;
   std::unique_ptr<mediapipe::OutputStreamPoller> landmarks_poller_;
@@ -33,9 +33,6 @@ class MMPGraph {
 
 # CPU image. (ImageFrame)
 input_stream: "input_video"
-
-# CPU image. (ImageFrame)
-output_stream: "output_video"
 
 # Generates side packet cotaining max number of hands to detect/track.
 node {
@@ -59,24 +56,11 @@ node {
   output_stream: "HAND_ROIS_FROM_LANDMARKS:multi_hand_rects"
   output_stream: "HAND_ROIS_FROM_PALM_DETECTIONS:multi_palm_rects"
 }
-
-# Subgraph that renders annotations and overlays them on top of the input
-# images (see hand_renderer_cpu.pbtxt).
-node {
-  calculator: "HandRendererSubgraph"
-  input_stream: "IMAGE:input_video"
-  input_stream: "DETECTIONS:multi_palm_detections"
-  input_stream: "LANDMARKS:landmarks"
-  input_stream: "HANDEDNESS:handedness"
-  input_stream: "NORM_RECTS:0:multi_palm_rects"
-  input_stream: "NORM_RECTS:1:multi_hand_rects"
-  output_stream: "IMAGE:output_video"
-}
 )";
 
  public:
-  MMPGraph();
-  ~MMPGraph();
+  HandTrackingMMPGraph();
+  ~HandTrackingMMPGraph();
 
   absl::Status InitMPPGraph();
   absl::Status InitMPPGraph(std::vector<std::string> model_paths);
@@ -84,4 +68,5 @@ node {
   absl::Status ReleaseMPPGraph();
 
   absl::Status RunMPPGraph(const cv::Mat &img, std::vector<HandInfo> &hands);
+  absl::Status RunMPPGraphByImageMode(const cv::Mat &img, std::vector<HandInfo> &hands);
 };
