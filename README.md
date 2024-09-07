@@ -1,3 +1,29 @@
+# mediapipe desktop
+
+support windows 32/64 bit
+
+## build
+
+In Windows, you need to add the Python environment variable:
+
+```shell
+setx PYTHON_BIN_PATH "path/to/python.exe"
+```
+
+> Use "/" for the path.
+
+32 bit
+    
+```shell
+bazel build -c opt --cpu=x64_x86_windows mediapipe/examples/desktop/mediapipe_desktop
+```
+
+64 bit
+
+```shell
+bazel build -c opt mediapipe/examples/desktop/mediapipe_desktop
+```
+
 ---
 layout: forward
 target: https://developers.google.com/mediapipe
