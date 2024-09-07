@@ -1,5 +1,3 @@
-
-
 #include "hand_tracking_sdk.h"
 
 #include <cstdlib>
@@ -24,7 +22,7 @@ static std::string last_error_message;
 
 std::string getHandTrackingErrorMessages() { return last_error_message; }
 
-int initHandTracking() { initHandTracking({}); }
+int initHandTracking() { return initHandTracking({}); }
 
 int initHandTracking(std::vector<std::string> model_paths) {
   graph = new HandTrackingMMPGraph();
