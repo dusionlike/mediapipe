@@ -16,7 +16,7 @@
 #include "mediapipe/framework/port/parse_text_proto.h"
 #include "mediapipe/framework/port/status.h"
 
-static MMPGraph *graph = nullptr;
+static FaceMeshMMPGraph *graph = nullptr;
 
 static std::string error_message;
 
@@ -28,8 +28,7 @@ int initFaceLandmark(int num_faces, bool with_attention) {
 
 int initFaceLandmark(std::vector<std::string> model_paths, int num_faces,
                      bool with_attention) {
-  google::InitGoogleLogging("FaceMeshDetectSDK");
-  graph = new MMPGraph();
+  graph = new FaceMeshMMPGraph();
   absl::Status run_status;
   if (model_paths.size() == 0) {
     run_status = graph->InitMPPGraph(num_faces, with_attention);
@@ -44,7 +43,6 @@ int initFaceLandmark(std::vector<std::string> model_paths, int num_faces,
 }
 
 int releaseFaceLandmark() {
-  google::ShutdownGoogleLogging();
   absl::Status run_status = graph->ReleaseMPPGraph();
   delete graph;
   graph = nullptr;

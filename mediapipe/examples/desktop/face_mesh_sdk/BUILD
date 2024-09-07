@@ -16,85 +16,35 @@ licenses(["notice"])
 
 package(default_visibility = ["//mediapipe/examples:__subpackages__"])
 
-cc_binary(
-    name = "face_mesh_test",
-    srcs = [
-        "test.cpp",
-    ],
-    data = [
-        "//mediapipe/modules/face_detection:face_detection_short_range.tflite",
-        "//mediapipe/modules/face_landmark:face_landmark_with_attention.tflite",
-        "//mediapipe/modules/face_landmark:face_landmark.tflite",
-    ],
-    deps = [
-        "//mediapipe/framework:calculator_framework",
-        "//mediapipe/framework/formats:image_frame",
-        "//mediapipe/framework/formats:image_frame_opencv",
-        "//mediapipe/framework/port:file_helpers",
-        "//mediapipe/framework/port:opencv_highgui",
-        "//mediapipe/framework/port:opencv_imgproc",
-        "//mediapipe/framework/port:opencv_video",
-        "//mediapipe/framework/port:parse_text_proto",
-        "//mediapipe/framework/port:status",
-        "//mediapipe/graphs/face_mesh:desktop_live_calculators",
-        "@com_google_absl//absl/flags:flag",
-        "@com_google_absl//absl/flags:parse",
-    ],
-)
-
-cc_binary(
+cc_library(
     name = "face_mesh_sdk",
     srcs = [
         "face_mesh_detect.cpp",
-        "face_mesh_detect.h",
         "face_mesh_sdk.cpp",
+    ],
+    hdrs = [
+        "face_mesh_detect.h",
         "face_mesh_sdk.h",
         "types.h",
     ],
     data = [
         "//mediapipe/modules/face_detection:face_detection_short_range.tflite",
-        "//mediapipe/modules/face_landmark:face_landmark_with_attention.tflite",
         "//mediapipe/modules/face_landmark:face_landmark.tflite",
+        "//mediapipe/modules/face_landmark:face_landmark_with_attention.tflite",
     ],
-    linkshared = True,
     deps = [
-        "//mediapipe/framework:calculator_framework",
-        "//mediapipe/framework/formats:image_frame",
-        "//mediapipe/framework/formats:image_frame_opencv",
-        "//mediapipe/framework/port:file_helpers",
-        "//mediapipe/framework/port:opencv_highgui",
-        "//mediapipe/framework/port:opencv_imgproc",
-        "//mediapipe/framework/port:opencv_video",
-        "//mediapipe/framework/port:parse_text_proto",
-        "//mediapipe/framework/port:status",
+        "//mediapipe/examples/desktop:demo_run_graph_main",
         "//mediapipe/graphs/face_mesh:desktop_live_calculators",
-        "@com_google_absl//absl/flags:flag",
-        "@com_google_absl//absl/flags:parse",
     ],
+    alwayslink = True,
 )
 
 cc_binary(
     name = "sdk_test",
     srcs = [
-        "face_mesh_detect.cpp",
-        "face_mesh_detect.h",
-        "face_mesh_sdk.cpp",
-        "face_mesh_sdk.h",
         "sdk_test.cpp",
-        "types.h",
     ],
     deps = [
-        "//mediapipe/framework:calculator_framework",
-        "//mediapipe/framework/formats:image_frame",
-        "//mediapipe/framework/formats:image_frame_opencv",
-        "//mediapipe/framework/port:file_helpers",
-        "//mediapipe/framework/port:opencv_highgui",
-        "//mediapipe/framework/port:opencv_imgproc",
-        "//mediapipe/framework/port:opencv_video",
-        "//mediapipe/framework/port:parse_text_proto",
-        "//mediapipe/framework/port:status",
-        "//mediapipe/graphs/face_mesh:desktop_live_calculators",
-        "@com_google_absl//absl/flags:flag",
-        "@com_google_absl//absl/flags:parse",
+        ":face_mesh_sdk",
     ],
 )

@@ -9,7 +9,7 @@
 #include "hair_segmentation.h"
 #include "mediapipe/framework/port/status.h"
 
-static MMPGraph *graph = nullptr;
+static HairSegMMPGraph *graph = nullptr;
 
 static std::string last_error_message;
 
@@ -18,8 +18,7 @@ std::string getHairSegErrorMessages() { return last_error_message; }
 int initHairSeg() { return initHairSeg({}); }
 
 int initHairSeg(std::vector<std::string> model_paths) {
-  google::InitGoogleLogging("HairSegSDK");
-  graph = new MMPGraph();
+  graph = new HairSegMMPGraph();
   absl::Status run_status;
   if (model_paths.size() == 0) {
     run_status = graph->InitMPPGraph();
@@ -34,7 +33,6 @@ int initHairSeg(std::vector<std::string> model_paths) {
 }
 
 int releaseHairSeg() {
-  google::ShutdownGoogleLogging();
   absl::Status run_status = graph->ReleaseMPPGraph();
   delete graph;
   graph = nullptr;

@@ -9,12 +9,17 @@
 #define EXPORT_SDK extern
 #endif
 
-EXPORT_SDK void initHandTracking();
-EXPORT_SDK void initHandTracking(std::vector<std::string> model_paths);
+EXPORT_SDK std::string getHandTrackingErrorMessages();
 
-EXPORT_SDK void releaseHandTracking();
+EXPORT_SDK int initHandTracking();
+EXPORT_SDK int initHandTracking(std::vector<std::string> model_paths);
 
-EXPORT_SDK void getHandLandmark(const cv::Mat &img,
+EXPORT_SDK int releaseHandTracking();
+
+EXPORT_SDK int getHandLandmark(const cv::Mat &img,
                                 std::vector<HandInfo> &hands);
+
+EXPORT_SDK int getHandLandmarkByImageMode(const cv::Mat &img,
+                                           std::vector<HandInfo> &hands);
 
 #undef EXPORT_SDK

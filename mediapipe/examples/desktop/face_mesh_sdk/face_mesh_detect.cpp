@@ -16,27 +16,11 @@ const int map_478_to_68[] = {
     78,  81,  13,  311, 308, 402, 14,  178  // 嘴巴
 };
 
-// /**
-//  * 将图片转换为指定大小的正方形，并且保持原始图片的长宽比不变形，不足的地方用黑色填充
-//  */
-// float resize_image(const cv::Mat &img, cv::Mat &output, int size) {
-//   cv::Size target_size(size, size);
-//   cv::Mat padded_img(target_size, img.type(), cv::Scalar(0));
-//   float scale = std::min(static_cast<float>(target_size.width) / img.cols,
-//                          static_cast<float>(target_size.height) / img.rows);
-//   cv::Size new_size = cv::Size(img.cols * scale, img.rows * scale);
-//   cv::Mat resized;
-//   cv::resize(img, resized, new_size);
-//   cv::Rect roi(0, 0, resized.cols, resized.rows);
-//   resized.copyTo(padded_img(roi));
-//   output = padded_img;
-//   return scale;
-// }
+FaceMeshMMPGraph::FaceMeshMMPGraph() {}
+FaceMeshMMPGraph::~FaceMeshMMPGraph() {}
 
-MMPGraph::MMPGraph() {}
-MMPGraph::~MMPGraph() {}
-
-absl::Status MMPGraph::InitMPPGraph(int num_faces, bool with_attention) {
+absl::Status FaceMeshMMPGraph::InitMPPGraph(int num_faces,
+                                            bool with_attention) {
   std::vector<std::string> model_paths = {
       "models/face_detection_short_range.tflite",
       with_attention ? "models/face_landmark_with_attention.tflite"
@@ -45,8 +29,8 @@ absl::Status MMPGraph::InitMPPGraph(int num_faces, bool with_attention) {
   return InitMPPGraph(model_paths, num_faces, with_attention);
 }
 
-absl::Status MMPGraph::InitMPPGraph(std::vector<std::string> model_paths,
-                                    int num_faces, bool with_attention) {
+absl::Status FaceMeshMMPGraph::InitMPPGraph(
+    std::vector<std::string> model_paths, int num_faces, bool with_attention) {
   if (model_paths.size() != 2) {
     return absl::InvalidArgumentError("model_paths should contain 2 elements");
   }
@@ -85,19 +69,15 @@ absl::Status MMPGraph::InitMPPGraph(std::vector<std::string> model_paths,
   return absl::OkStatus();
 }
 
-absl::Status MMPGraph::ReleaseMPPGraph() {
+absl::Status FaceMeshMMPGraph::ReleaseMPPGraph() {
   MP_RETURN_IF_ERROR(graph.CloseAllInputStreams());
   MP_RETURN_IF_ERROR(graph.CloseAllPacketSources());
   MP_RETURN_IF_ERROR(graph.WaitUntilDone());
   return absl::OkStatus();
 }
 
-absl::Status MMPGraph::RunMPPGraphByImageMode(const cv::Mat &img,
-                                              std::vector<FaceInfo> &faces) {
-  if (graph.GraphInputStreamsClosed()) {
-    MP_RETURN_IF_ERROR(graph.StartRun({}));
-  }
-
+absl::Status FaceMeshMMPGraph::RunMPPGraphByImageMode(
+    const cv::Mat &img, std::vector<FaceInfo> &faces) {
   auto res = RunMPPGraph(img, faces);
 
   MP_RETURN_IF_ERROR(graph.CloseAllInputStreams());
@@ -105,8 +85,12 @@ absl::Status MMPGraph::RunMPPGraphByImageMode(const cv::Mat &img,
   return res;
 }
 
-absl::Status MMPGraph::RunMPPGraph(const cv::Mat &ori_img,
-                                   std::vector<FaceInfo> &faces) {
+absl::Status FaceMeshMMPGraph::RunMPPGraph(const cv::Mat &ori_img,
+                                           std::vector<FaceInfo> &faces) {
+  if (graph.GraphInputStreamsClosed()) {
+    MP_RETURN_IF_ERROR(graph.StartRun({}));
+  }
+
   cv::Mat img;
   cv::cvtColor(ori_img, img, cv::COLOR_BGR2RGB);
   // resize_image(ori_img, img, std::max(ori_img.cols, ori_img.rows));

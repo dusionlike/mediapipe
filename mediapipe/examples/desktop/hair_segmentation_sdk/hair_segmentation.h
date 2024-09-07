@@ -14,7 +14,7 @@
 #include "mediapipe/framework/port/parse_text_proto.h"
 #include "mediapipe/framework/port/status.h"
 
-class MMPGraph {
+class HairSegMMPGraph {
  private:
   mediapipe::CalculatorGraph graph;
   std::unique_ptr<mediapipe::OutputStreamPoller> mask_poller_;
@@ -159,8 +159,8 @@ node {
 )";
 
  public:
-  MMPGraph();
-  ~MMPGraph();
+  HairSegMMPGraph();
+  ~HairSegMMPGraph();
 
   absl::Status InitMPPGraph();
   absl::Status InitMPPGraph(std::vector<std::string> model_paths);
