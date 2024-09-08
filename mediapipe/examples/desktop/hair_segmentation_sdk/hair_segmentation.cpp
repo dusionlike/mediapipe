@@ -20,8 +20,9 @@ absl::Status HairSegMMPGraph::InitMPPGraph(
   if (model_paths.size() != 1) {
     return absl::InvalidArgumentError("model_paths should contain 1 elements");
   }
-  mediapipe::GlobalModelPathMap::Add(
-      "mediapipe/models/hair_segmentation.tflite", model_paths[0]);
+
+  absl::StrReplaceAll({{"$MODEL_PATH", model_paths[0]}},
+                      &calculator_graph_config_contents);
 
   mediapipe::CalculatorGraphConfig config =
       mediapipe::ParseTextProtoOrDie<mediapipe::CalculatorGraphConfig>(
