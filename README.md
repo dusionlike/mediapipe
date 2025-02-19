@@ -4,13 +4,24 @@ support windows 32/64 bit
 
 ## build
 
-In Windows, you need to add the Python environment variable:
+### Prerequisites
+
+1. Visual Studio 2022
+   - Install Visual Studio 2022 Community Edition
+   - Make sure only keep Auxiliary, Redist and Tools folders under `%BAZEL_VC%\VC`
+   - Do not install vcpkg component
+
+### Environment Variables
+
+In Windows, you need to add the following environment variables:
 
 ```shell
 setx PYTHON_BIN_PATH "path/to/python.exe"
+# For Windows 11, you also need to set:
+setx BAZEL_SH "C:\Program Files\Git\bin\bash.exe"
 ```
 
-> Use "/" for the path.
+> Use "/" for the PYTHON_BIN_PATH.
 
 32 bit
     
