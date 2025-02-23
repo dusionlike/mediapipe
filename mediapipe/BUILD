@@ -176,14 +176,24 @@ alias(
     visibility = ["//visibility:public"],
 )
 
-# Windows 64-bit.
-config_setting_and_platform(
+alias(
     name = "windows",
-    constraint_values = [
-        "@platforms//os:windows",
-        "@platforms//cpu:x86_64",
-    ],
+    actual = select({
+        ":windows_x64": ":windows_x64",
+        ":windows_x86": ":windows_x86",
+        "//conditions:default": ":windows_x64",  # Arbitrarily chosen from above.
+    }),
     visibility = ["//visibility:public"],
+)
+
+config_setting(
+    name = "windows_x64",
+    values = {"cpu": "x64_windows"},
+)
+
+config_setting(
+    name = "windows_x86",
+    values = {"cpu": "x64_x86_windows"},
 )
 
 # Linux 64-bit.

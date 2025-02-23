@@ -54,8 +54,5 @@ flags:
   --apple_platform_type=ios
     @mediapipe//mediapipe:ios_arm64e_platform
 
-  --cpu=x64_windows
-    @mediapipe//mediapipe:windows_platform
-
   --cpu=k8
     @mediapipe//mediapipe:linux_platform

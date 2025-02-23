@@ -1,0 +1,812 @@
+diff --git a/tensorflow/BUILD b/tensorflow/BUILD
+index d62edbbfcf4..418a5ed2902 100644
+--- a/tensorflow/BUILD
++++ b/tensorflow/BUILD
+@@ -401,8 +401,18 @@ config_setting(
+ )
+ 
+ # TODO(jakeharmon8): Remove in favor of TSL version
+-config_setting(
++alias(
+     name = "windows",
++    actual = select({
++        ":windows_x64": ":windows_x64",
++        ":windows_x86": ":windows_x86",
++        "//conditions:default": ":windows_x64",  # Arbitrarily chosen from above.
++    }),
++    visibility = ["//visibility:public"],
++)
++
++config_setting(
++    name = "windows_x64",
+     # Internal builds query the target OS.
+     constraint_values = if_google(
+         ["//third_party/bazel_platforms/os:windows"],
+@@ -416,6 +426,21 @@ config_setting(
+     visibility = ["//visibility:public"],
+ )
+ 
++config_setting(
++    name = "windows_x86",
++    # Internal builds query the target OS.
++    flag_values = if_google(
++        {"//tools/cpp:cc_target_os": "windows"},
++        {},
++    ),
++    # OSS builds query the CPU type.
++    values = if_oss(
++        {"cpu": "x64_x86_windows"},
++        {},
++    ),
++    visibility = ["//visibility:public"],
++)
++
+ config_setting(
+     name = "no_tensorflow_py_deps",
+     define_values = {"no_tensorflow_py_deps": "true"},
+diff --git a/tensorflow/lite/kernels/internal/BUILD b/tensorflow/lite/kernels/internal/BUILD
+index 2a1f510c131..409127cd8bf 100644
+--- a/tensorflow/lite/kernels/internal/BUILD
++++ b/tensorflow/lite/kernels/internal/BUILD
+@@ -247,11 +247,24 @@ config_setting(
+     },
+ )
+ 
+-config_setting(
++alias(
+     name = "windows",
+-    values = {
+-        "cpu": "x64_windows",
+-    },
++    actual = select({
++        ":windows_x64": ":windows_x64",
++        ":windows_x86": ":windows_x86",
++        "//conditions:default": ":windows_x64",  # Arbitrarily chosen from above.
++    }),
++    visibility = ["//visibility:public"],
++)
++
++config_setting(
++    name = "windows_x64",
++    values = {"cpu": "x64_windows"},
++)
++
++config_setting(
++    name = "windows_x86",
++    values = {"cpu": "x64_x86_windows"},
+ )
+ 
+ config_setting(
+diff --git a/tensorflow/tools/toolchains/cpus/py/BUILD b/tensorflow/tools/toolchains/cpus/py/BUILD
+index 1235988abb7..e4fd94f02bd 100644
+--- a/tensorflow/tools/toolchains/cpus/py/BUILD
++++ b/tensorflow/tools/toolchains/cpus/py/BUILD
+@@ -34,12 +34,26 @@ cc_library(
+     includes = ["numpy_include"],
+ )
+ 
+-config_setting(
++alias(
+     name = "windows",
+-    values = {"cpu": "x64_windows"},
++    actual = select({
++        ":windows_x64": ":windows_x64",
++        ":windows_x86": ":windows_x86",
++        "//conditions:default": ":windows_x64",  # Arbitrarily chosen from above.
++    }),
+     visibility = ["//visibility:public"],
+ )
+ 
++config_setting(
++    name = "windows_x64",
++    values = {"cpu": "x64_windows"},
++)
++
++config_setting(
++    name = "windows_x86",
++    values = {"cpu": "x64_x86_windows"},
++)
++
+ genrule(
+     name = "python_include",
+     outs = [
+diff --git a/tensorflow/tools/toolchains/cpus/py3/BUILD b/tensorflow/tools/toolchains/cpus/py3/BUILD
+index d47256ebef8..fd2ec3d7d0a 100644
+--- a/tensorflow/tools/toolchains/cpus/py3/BUILD
++++ b/tensorflow/tools/toolchains/cpus/py3/BUILD
+@@ -34,12 +34,26 @@ cc_library(
+     includes = ["numpy_include"],
+ )
+ 
+-config_setting(
++alias(
+     name = "windows",
+-    values = {"cpu": "x64_windows"},
++    actual = select({
++        ":windows_x64": ":windows_x64",
++        ":windows_x86": ":windows_x86",
++        "//conditions:default": ":windows_x64",  # Arbitrarily chosen from above.
++    }),
+     visibility = ["//visibility:public"],
+ )
+ 
++config_setting(
++    name = "windows_x64",
++    values = {"cpu": "x64_windows"},
++)
++
++config_setting(
++    name = "windows_x86",
++    values = {"cpu": "x64_x86_windows"},
++)
++
+ genrule(
+     name = "python_include",
+     outs = [
+diff --git a/tensorflow/tools/toolchains/win_1803/py38/BUILD b/tensorflow/tools/toolchains/win_1803/py38/BUILD
+index 9aa4d82e6da..752c8e38704 100644
+--- a/tensorflow/tools/toolchains/win_1803/py38/BUILD
++++ b/tensorflow/tools/toolchains/win_1803/py38/BUILD
+@@ -51,12 +51,26 @@ cc_library(
+     includes = ["numpy_include"],
+ )
+ 
+-config_setting(
++alias(
+     name = "windows",
+-    values = {"cpu": "x64_windows"},
++    actual = select({
++        ":windows_x64": ":windows_x64",
++        ":windows_x86": ":windows_x86",
++        "//conditions:default": ":windows_x64",  # Arbitrarily chosen from above.
++    }),
+     visibility = ["//visibility:public"],
+ )
+ 
++config_setting(
++    name = "windows_x64",
++    values = {"cpu": "x64_windows"},
++)
++
++config_setting(
++    name = "windows_x86",
++    values = {"cpu": "x64_x86_windows"},
++)
++
+ genrule(
+     name = "python_include",
+     outs = [
+diff --git a/tensorflow/tools/toolchains/win_1803/py39/BUILD b/tensorflow/tools/toolchains/win_1803/py39/BUILD
+index f5b545cb161..a970bd269d1 100644
+--- a/tensorflow/tools/toolchains/win_1803/py39/BUILD
++++ b/tensorflow/tools/toolchains/win_1803/py39/BUILD
+@@ -78,12 +78,26 @@ cc_library(
+     includes = ["numpy_include"],
+ )
+ 
+-config_setting(
++alias(
+     name = "windows",
+-    values = {"cpu": "x64_windows"},
++    actual = select({
++        ":windows_x64": ":windows_x64",
++        ":windows_x86": ":windows_x86",
++        "//conditions:default": ":windows_x64",  # Arbitrarily chosen from above.
++    }),
+     visibility = ["//visibility:public"],
+ )
+ 
++config_setting(
++    name = "windows_x64",
++    values = {"cpu": "x64_windows"},
++)
++
++config_setting(
++    name = "windows_x86",
++    values = {"cpu": "x64_x86_windows"},
++)
++
+ genrule(
+     name = "python_include",
+     outs = [
+diff --git a/tensorflow/workspace2.bzl b/tensorflow/workspace2.bzl
+index be83c971749..7bea9659001 100644
+--- a/tensorflow/workspace2.bzl
++++ b/tensorflow/workspace2.bzl
+@@ -150,9 +150,10 @@ def _tf_repositories():
+     # LINT.IfChange
+     tf_http_archive(
+         name = "XNNPACK",
+-        sha256 = "f66213a4d66991b2a44400f95fcd260adf6f4f7077956cdf7fce2571d6164d5e",
+-        strip_prefix = "XNNPACK-6b83f69d4938da4dc9ad63c00bd13e9695659a51",
+-        urls = tf_mirror_urls("https://github.com/google/XNNPACK/archive/6b83f69d4938da4dc9ad63c00bd13e9695659a51.zip"),
++        patch_file = ["//third_party:xnnpack_windows_x86_32.patch"],
++        sha256 = "af30fe2b301330a7e19cd422acf22991de3c1f5d91dda58e9ee67544d608fa51",
++        strip_prefix = "XNNPACK-dc1549a7141c7a9496ae160bb27b8700f0f6e1f1",
++        urls = tf_mirror_urls("https://github.com/google/XNNPACK/archive/dc1549a7141c7a9496ae160bb27b8700f0f6e1f1.zip"),
+     )
+     # LINT.ThenChange(//tensorflow/lite/tools/cmake/modules/xnnpack.cmake)
+ 
+@@ -173,6 +174,7 @@ def _tf_repositories():
+ 
+     tf_http_archive(
+         name = "pthreadpool",
++        patch_file = ["//third_party:pthreadpool_windows_x86_32.patch"],
+         sha256 = "a4cf06de57bfdf8d7b537c61f1c3071bce74e57524fe053e0bbd2332feca7f95",
+         strip_prefix = "pthreadpool-4fe0e1e183925bf8cfa6aae24237e724a96479b8",
+         urls = tf_mirror_urls("https://github.com/Maratyszcza/pthreadpool/archive/4fe0e1e183925bf8cfa6aae24237e724a96479b8.zip"),
+@@ -180,9 +182,10 @@ def _tf_repositories():
+ 
+     tf_http_archive(
+         name = "cpuinfo",
+-        sha256 = "2bf2b62eb86e2d2eaf862d0b9683a6c467a4d69fb2f7f1dc47c799809148608f",
+-        strip_prefix = "cpuinfo-fa1c679da8d19e1d87f20175ae1ec10995cd3dd3",
+-        urls = tf_mirror_urls("https://github.com/pytorch/cpuinfo/archive/fa1c679da8d19e1d87f20175ae1ec10995cd3dd3.zip"),
++        patch_file = ["//third_party:cpuinfo_windows_x86_32.patch"],
++        sha256 = "e2bd8049d29dfbed675a0bc7c01947f8b8bd3f17f706b827d3f6c1e5c64dd8c3",
++        strip_prefix = "cpuinfo-8df44962d437a0477f07ba6b8843d0b6a48646a4",
++        urls = tf_mirror_urls("https://github.com/pytorch/cpuinfo/archive/8df44962d437a0477f07ba6b8843d0b6a48646a4.zip"),
+     )
+ 
+     tf_http_archive(
+@@ -419,6 +422,7 @@ def _tf_repositories():
+ 
+     tf_http_archive(
+         name = "com_github_gflags_gflags",
++        patch_file = ["//third_party:gflags_windows_x86_32.patch"],
+         sha256 = "34af2f15cf7367513b352bdcd2493ab14ce43692d2dcd9dfc499492966c64dcf",
+         strip_prefix = "gflags-2.2.2",
+         urls = tf_mirror_urls("https://github.com/gflags/gflags/archive/v2.2.2.tar.gz"),
+diff --git a/third_party/cpuinfo_windows_x86_32.patch b/third_party/cpuinfo_windows_x86_32.patch
+new file mode 100644
+index 00000000000..ca2c6abb1fd
+--- /dev/null
++++ b/third_party/cpuinfo_windows_x86_32.patch
+@@ -0,0 +1,50 @@
++diff --git a/BUILD.bazel b/BUILD.bazel
++index 2c6375f..7891c92 100644
++--- a/BUILD.bazel
+++++ b/BUILD.bazel
++@@ -141,7 +141,7 @@ cc_library(
++         ":macos_x86_64_legacy": COMMON_SRCS + X86_SRCS + MACH_SRCS + MACH_X86_SRCS,
++         ":macos_arm64": COMMON_SRCS + MACH_SRCS + MACH_ARM_SRCS,
++         ":freebsd_x86_64": COMMON_SRCS + X86_SRCS + FREEBSD_SRCS + FREEBSD_X86_SRCS,
++-        ":windows_x86_64": COMMON_SRCS + X86_SRCS + WINDOWS_X86_SRCS,
+++        ":windows": COMMON_SRCS + X86_SRCS + WINDOWS_X86_SRCS,
++         ":windows_arm64": COMMON_SRCS + ARM_SRCS + WINDOWS_ARM_SRCS,
++         ":android_armv7": COMMON_SRCS + ARM_SRCS + LINUX_SRCS + LINUX_ARM32_SRCS + ANDROID_ARM_SRCS,
++         ":android_arm64": COMMON_SRCS + ARM_SRCS + LINUX_SRCS + LINUX_ARM64_SRCS + ANDROID_ARM_SRCS,
++@@ -163,7 +163,7 @@ cc_library(
++         ":emscripten_wasm": COMMON_SRCS + EMSCRIPTEN_SRCS,
++     }),
++     copts = select({
++-        ":windows_x86_64": [],
+++        ":windows": [],
++         ":windows_arm64": [],
++         "//conditions:default": C99OPTS,
++     }) + [
++@@ -293,11 +293,26 @@ config_setting(
++     },
++ )
++ 
+++alias(
+++    name = "windows",
+++    actual = select({
+++        ":windows_x64": ":windows_x64",
+++        ":windows_x86": ":windows_x86",
+++        "//conditions:default": ":windows_x64",  # Arbitrarily chosen from above.
+++    }),
+++    visibility = ["//visibility:public"],
+++)
+++
++ config_setting(
++-    name = "windows_x86_64",
+++    name = "windows_x64",
++     values = {"cpu": "x64_windows"},
++ )
++ 
+++config_setting(
+++    name = "windows_x86",
+++    values = {"cpu": "x64_x86_windows"},
+++)
+++
++ config_setting(
++     name = "windows_arm64",
++     values = {"cpu": "arm64_windows"},
+diff --git a/third_party/farmhash/farmhash.BUILD b/third_party/farmhash/farmhash.BUILD
+index 4b8464684ae..7e42abdfa80 100644
+--- a/third_party/farmhash/farmhash.BUILD
++++ b/third_party/farmhash/farmhash.BUILD
+@@ -2,11 +2,24 @@ licenses(["notice"])  # MIT
+ 
+ exports_files(["COPYING"])
+ 
+-config_setting(
++alias(
+     name = "windows",
+-    values = {
+-        "cpu": "x64_windows",
+-    },
++    actual = select({
++        ":windows_x64": ":windows_x64",
++        ":windows_x86": ":windows_x86",
++        "//conditions:default": ":windows_x64",
++    }),
++    visibility = ["//visibility:public"],
++)
++
++config_setting(
++    name = "windows_x64",
++    values = {"cpu": "x64_windows"},
++)
++
++config_setting(
++    name = "windows_x86",
++    values = {"cpu": "x64_x86_windows"},
+ )
+ 
+ cc_library(
+diff --git a/third_party/fft2d/fft2d.BUILD b/third_party/fft2d/fft2d.BUILD
+index 9fa5097f362..55b2d6d9849 100644
+--- a/third_party/fft2d/fft2d.BUILD
++++ b/third_party/fft2d/fft2d.BUILD
+@@ -15,11 +15,26 @@ FFT2D_SRCS = [
+     "fftsg2d.c",
+ ]
+ 
+-config_setting(
++alias(
+     name = "windows",
++    actual = select({
++        ":windows_x64": ":windows_x64",
++        ":windows_x86": ":windows_x86",
++        "//conditions:default": ":windows_x64",  # Arbitrarily chosen from above.
++    }),
++    visibility = ["//visibility:public"],
++)
++
++config_setting(
++    name = "windows_x64",
+     values = {"cpu": "x64_windows"},
+ )
+ 
++config_setting(
++    name = "windows_x86",
++    values = {"cpu": "x64_x86_windows"},
++)
++
+ # This is the main 2D FFT library.  The 2D FFTs in this library call
+ # 1D FFTs.  In addition, fast DCTs are provided for the special case
+ # of 8x8 and 16x16.  This code in this library is referred to as
+diff --git a/third_party/flatbuffers/flatbuffers.BUILD b/third_party/flatbuffers/flatbuffers.BUILD
+index 2b78d1e03ba..f62dfe8c72c 100644
+--- a/third_party/flatbuffers/flatbuffers.BUILD
++++ b/third_party/flatbuffers/flatbuffers.BUILD
+@@ -18,11 +18,26 @@ config_setting(
+     values = {"cpu": "openbsd"},
+ )
+ 
+-config_setting(
++alias(
+     name = "windows",
++    actual = select({
++        ":windows_x64": ":windows_x64",
++        ":windows_x86": ":windows_x86",
++        "//conditions:default": ":windows_x64",  # Arbitrarily chosen from above.
++    }),
++    visibility = ["//visibility:public"],
++)
++
++config_setting(
++    name = "windows_x64",
+     values = {"cpu": "x64_windows"},
+ )
+ 
++config_setting(
++    name = "windows_x86",
++    values = {"cpu": "x64_x86_windows"},
++)
++
+ # Public flatc library to compile flatbuffer files at runtime.
+ cc_library(
+     name = "flatbuffers",
+diff --git a/third_party/gflags_windows_x86_32.patch b/third_party/gflags_windows_x86_32.patch
+new file mode 100644
+index 00000000000..25a0adc84b1
+--- /dev/null
++++ b/third_party/gflags_windows_x86_32.patch
+@@ -0,0 +1,49 @@
++diff --git a/BUILD b/BUILD
++index 0e7ccdd..8bb3cc5 100644
++--- a/BUILD
+++++ b/BUILD
++@@ -11,6 +11,11 @@ config_setting(
++     values = {"cpu": "x64_windows"},
++ )
++ 
+++config_setting(
+++    name = "x64_x86_windows",
+++    values = {"cpu": "x64_x86_windows"},
+++)
+++
++ load(":bazel/gflags.bzl", "gflags_sources", "gflags_library")
++ 
++ (hdrs, srcs) = gflags_sources(namespace=["gflags", "google"])
++diff --git a/bazel/gflags.bzl b/bazel/gflags.bzl
++index 533fd61..e3c02ce 100644
++--- a/bazel/gflags.bzl
+++++ b/bazel/gflags.bzl
++@@ -53,6 +53,10 @@ def gflags_sources(namespace=["google", "gflags"]):
++             "src/windows_port.cc",
++             "src/windows_port.h",
++         ],
+++        "//:x64_x86_windows": [
+++            "src/windows_port.cc",
+++            "src/windows_port.h",
+++        ],
++         "//conditions:default": [],
++     })
++     return [hdrs, srcs]
++@@ -77,6 +81,9 @@ def gflags_library(hdrs=[], srcs=[], threads=1):
++         "//:x64_windows": [
++             "-DOS_WINDOWS",
++         ],
+++        "//:x64_x86_windows": [
+++            "-DOS_WINDOWS",
+++        ],
++         "//conditions:default": [
++             "-DHAVE_UNISTD_H",
++             "-DHAVE_FNMATCH_H",
++@@ -87,6 +94,7 @@ def gflags_library(hdrs=[], srcs=[], threads=1):
++     if threads:
++         linkopts += select({
++             "//:x64_windows": [],
+++            "//:x64_x86_windows": [],
++             "//conditions:default": ["-lpthread"],
++         })
++     else:
+diff --git a/third_party/gif.BUILD b/third_party/gif.BUILD
+index 51621ba953e..d20fd1f18df 100644
+--- a/third_party/gif.BUILD
++++ b/third_party/gif.BUILD
+@@ -48,11 +48,24 @@ genrule(
+     cmd = "touch $@",
+ )
+ 
+-config_setting(
++alias(
+     name = "windows",
+-    values = {
+-        "cpu": "x64_windows",
+-    },
++    actual = select({
++        ":windows_x64": ":windows_x64",
++        ":windows_x86": ":windows_x86",
++        "//conditions:default": ":windows_x64",  # Arbitrarily chosen from above.
++    }),
++    visibility = ["//visibility:public"],
++)
++
++config_setting(
++    name = "windows_x64",
++    values = {"cpu": "x64_windows"},
++)
++
++config_setting(
++    name = "windows_x86",
++    values = {"cpu": "x64_x86_windows"},
+ )
+ 
+ config_setting(
+diff --git a/third_party/icu/icu.BUILD b/third_party/icu/icu.BUILD
+index 14cadffc841..6ba09260dc6 100644
+--- a/third_party/icu/icu.BUILD
++++ b/third_party/icu/icu.BUILD
+@@ -80,7 +80,22 @@ config_setting(
+     values = {"cpu": "darwin"},
+ )
+ 
+-config_setting(
++alias(
+     name = "windows",
++    actual = select({
++        ":windows_x64": ":windows_x64",
++        ":windows_x86": ":windows_x86",
++        "//conditions:default": ":windows_x64",  # Arbitrarily chosen from above.
++    }),
++    visibility = ["//visibility:public"],
++)
++
++config_setting(
++    name = "windows_x64",
+     values = {"cpu": "x64_windows"},
+ )
++
++config_setting(
++    name = "windows_x86",
++    values = {"cpu": "x64_x86_windows"},
++)
+diff --git a/third_party/jpeg/jpeg.BUILD b/third_party/jpeg/jpeg.BUILD
+index 9afb8ba2165..433b5bf2fff 100644
+--- a/third_party/jpeg/jpeg.BUILD
++++ b/third_party/jpeg/jpeg.BUILD
+@@ -793,12 +793,27 @@ config_setting(
+     values = {"cpu": "arm64-v8a"},
+ )
+ 
+-config_setting(
++alias(
+     name = "windows",
++    actual = select({
++        ":windows_x64": ":windows_x64",
++        ":windows_x86": ":windows_x86",
++        "//conditions:default": ":windows_x64",  # Arbitrarily chosen from above.
++    }),
++    visibility = ["//visibility:public"],
++)
++
++config_setting(
++    name = "windows_x64",
+     flag_values = {":noasm": "no"},
+     values = {"cpu": "x64_windows"},
+ )
+ 
++config_setting(
++    name = "windows_x86",
++    values = {"cpu": "x64_x86_windows"},
++)
++
+ config_setting(
+     name = "linux_ppc64le",
+     flag_values = {":noasm": "no"},
+diff --git a/third_party/nasm/nasm.BUILD b/third_party/nasm/nasm.BUILD
+index a328d07ad5a..0ade348ad0f 100644
+--- a/third_party/nasm/nasm.BUILD
++++ b/third_party/nasm/nasm.BUILD
+@@ -130,9 +130,22 @@ cc_binary(
+     ],
+ )
+ 
+-config_setting(
++alias(
+     name = "windows",
+-    values = {
+-        "cpu": "x64_windows",
+-    },
++    actual = select({
++        ":windows_x64": ":windows_x64",
++        ":windows_x86": ":windows_x86",
++        "//conditions:default": ":windows_x64",  # Arbitrarily chosen from above.
++    }),
++    visibility = ["//visibility:public"],
++)
++
++config_setting(
++    name = "windows_x64",
++    values = {"cpu": "x64_windows"},
++)
++
++config_setting(
++    name = "windows_x86",
++    values = {"cpu": "x64_x86_windows"},
+ )
+diff --git a/third_party/png.BUILD b/third_party/png.BUILD
+index ea1995e025f..5fb0ef71dd5 100644
+--- a/third_party/png.BUILD
++++ b/third_party/png.BUILD
+@@ -64,7 +64,22 @@ genrule(
+     cmd = "sed -e 's/PNG_ZLIB_VERNUM 0/PNG_ZLIB_VERNUM 0x1310/' $< >$@",
+ )
+ 
+-config_setting(
++alias(
+     name = "windows",
++    actual = select({
++        ":windows_x64": ":windows_x64",
++        ":windows_x86": ":windows_x86",
++        "//conditions:default": ":windows_x64",  # Arbitrarily chosen from above.
++    }),
++    visibility = ["//visibility:public"],
++)
++
++config_setting(
++    name = "windows_x64",
+     values = {"cpu": "x64_windows"},
+ )
++
++config_setting(
++    name = "windows_x86",
++    values = {"cpu": "x64_x86_windows"},
++)
+diff --git a/third_party/pthreadpool_windows_x86_32.patch b/third_party/pthreadpool_windows_x86_32.patch
+new file mode 100644
+index 00000000000..35e38ce3a4e
+--- /dev/null
++++ b/third_party/pthreadpool_windows_x86_32.patch
+@@ -0,0 +1,61 @@
++diff --git a/BUILD.bazel b/BUILD.bazel
++index f55a493..0d8035b 100644
++--- a/BUILD.bazel
+++++ b/BUILD.bazel
++@@ -45,13 +45,13 @@ cc_library(
++         ":ios": INTERNAL_HDRS + GCD_IMPL_SRCS,
++         ":watchos": INTERNAL_HDRS + GCD_IMPL_SRCS,
++         ":tvos": INTERNAL_HDRS + GCD_IMPL_SRCS,
++-        ":windows_x86_64": INTERNAL_HDRS + WINDOWS_IMPL_SRCS,
+++        ":windows": INTERNAL_HDRS + WINDOWS_IMPL_SRCS,
++         "//conditions:default": INTERNAL_HDRS + PTHREADS_IMPL_SRCS,
++     }) + select({
++         ":linux_x86_64": ARCH_SPECIFIC_SRCS,
++         ":android_x86": ARCH_SPECIFIC_SRCS,
++         ":android_x86_64": ARCH_SPECIFIC_SRCS,
++-        ":windows_x86_64": ARCH_SPECIFIC_SRCS,
+++        ":windows": ARCH_SPECIFIC_SRCS,
++         ":macos_x86": ARCH_SPECIFIC_SRCS,
++         ":macos_x86_64": ARCH_SPECIFIC_SRCS,
++         ":macos_arm64": ARCH_SPECIFIC_SRCS,
++@@ -106,7 +106,7 @@ cc_library(
++         ":linux_x86_64": ["-DPTHREADPOOL_USE_FASTPATH=1"],
++         ":android_x86": ["-DPTHREADPOOL_USE_FASTPATH=1"],
++         ":android_x86_64": ["-DPTHREADPOOL_USE_FASTPATH=1"],
++-        ":windows_x86_64": ["-DPTHREADPOOL_USE_FASTPATH=1"],
+++        ":windows": ["-DPTHREADPOOL_USE_FASTPATH=1"],
++         ":macos_x86": ["-DPTHREADPOOL_USE_FASTPATH=1"],
++         ":macos_x86_64": ["-DPTHREADPOOL_USE_FASTPATH=1"],
++         ":macos_arm64": ["-DPTHREADPOOL_USE_FASTPATH=1"],
++@@ -407,13 +407,30 @@ config_setting(
++     },
++ )
++ 
+++alias(
+++    name = "windows",
+++    actual = select({
+++        ":windows_x64": ":windows_x64",
+++        ":windows_x86": ":windows_x86",
+++        "//conditions:default": ":windows_x64",  # Arbitrarily chosen from above.
+++    }),
+++    visibility = ["//visibility:public"],
+++)
+++
++ config_setting(
++-    name = "windows_x86_64",
+++    name = "windows_x64",
++     values = {
++         "cpu": "x64_windows",
++     },
++ )
++ 
+++config_setting(
+++    name = "windows_x86",
+++    values = {
+++        "cpu": "x64_x86_windows",
+++    },
+++)
+++
++ config_setting(
++     name = "emscripten",
++     values = {
+diff --git a/third_party/py/BUILD.tpl b/third_party/py/BUILD.tpl
+index 7cc1e085684..bed04e4fac2 100644
+--- a/third_party/py/BUILD.tpl
++++ b/third_party/py/BUILD.tpl
+@@ -46,8 +46,22 @@ alias(
+ )
+ 
+ 
+-config_setting(
++alias(
+     name = "windows",
+-    values = {"cpu": "x64_windows"},
++    actual = select({
++        ":windows_x64": ":windows_x64",
++        ":windows_x86": ":windows_x86",
++        "//conditions:default": ":windows_x64",  # Arbitrarily chosen from above.
++    }),
+     visibility = ["//visibility:public"],
+ )
++
++config_setting(
++    name = "windows_x64",
++    values = {"cpu": "x64_windows"},
++)
++
++config_setting(
++    name = "windows_x86",
++    values = {"cpu": "x64_x86_windows"},
++)
+diff --git a/third_party/xnnpack_windows_x86_32.patch b/third_party/xnnpack_windows_x86_32.patch
+new file mode 100644
+index 00000000000..b1c7e3ae734
+--- /dev/null
++++ b/third_party/xnnpack_windows_x86_32.patch
+@@ -0,0 +1,90 @@
++diff --git a/build_config/BUILD.bazel b/build_config/BUILD.bazel
++index 6352a43ac..2c7bcc0e6 100644
++--- a/build_config/BUILD.bazel
+++++ b/build_config/BUILD.bazel
++@@ -93,11 +93,26 @@ config_setting(
++     },
++ )
++ 
+++alias(
+++    name = "windows",
+++    actual = select({
+++        ":windows_x64": ":windows_x64",
+++        ":windows_x86": ":windows_x86",
+++        "//conditions:default": ":windows_x64",
+++    }),
+++    visibility = ["//visibility:public"],
+++)
+++
++ config_setting(
++-    name = "windows_x86_64",
+++    name = "windows_x64",
++     values = {"cpu": "x64_windows"},
++ )
++ 
+++config_setting(
+++    name = "windows_x86",
+++    values = {"cpu": "x64_x86_windows"},
+++)
+++
++ config_setting(
++     name = "windows_x86_64_clang",
++     values = {
++@@ -308,7 +323,7 @@ selects.config_setting_group(
++         ":macos_x86_64_legacy",
++         ":tvos_x86_64",
++         ":watchos_x86_64",
++-        ":windows_x86_64",
+++        ":windows",
++         ":windows_x86_64_clang",
++         ":windows_x86_64_mingw",
++         ":windows_x86_64_msys",
++diff --git a/build_defs.bzl b/build_defs.bzl
++index d0e6b7bb6..cc94be0cc 100644
++--- a/build_defs.bzl
+++++ b/build_defs.bzl
++@@ -197,7 +197,7 @@ def xnnpack_cc_library(
++             "//build_config:windows_x86_64_clang": ["/clang:" + opt for opt in gcc_x86_copts],
++             "//build_config:windows_x86_64_mingw": mingw_copts + gcc_x86_copts,
++             "//build_config:windows_x86_64_msys": msys_copts + gcc_x86_copts,
++-            "//build_config:windows_x86_64": msvc_x86_64_copts,
+++            "//build_config:windows": msvc_x86_64_copts,
++             "//build_config:android_armv7": aarch32_copts,
++             "//build_config:android_arm64": aarch64_copts,
++             "//build_config:android_x86": gcc_x86_copts,
++@@ -218,7 +218,7 @@ def xnnpack_cc_library(
++             "//build_config:windows_x86_64_clang": ["/clang:" + opt for opt in gcc_copts],
++             "//build_config:windows_x86_64_mingw": gcc_copts,
++             "//build_config:windows_x86_64_msys": gcc_copts,
++-            "//build_config:windows_x86_64": msvc_copts,
+++            "//build_config:windows": msvc_copts,
++             "//conditions:default": gcc_copts,
++         }) + select({
++             "//:optimized_build": optimized_copts,
++@@ -291,7 +291,7 @@ def xnnpack_unit_test(name, srcs, copts = [], mingw_copts = [], msys_copts = [],
++                 "//build_config:windows_x86_64_clang": ["/clang:-Wno-unused-function"],
++                 "//build_config:windows_x86_64_mingw": ["-Wno-unused-function"],
++                 "//build_config:windows_x86_64_msys": ["-Wno-unused-function"],
++-                "//build_config:windows_x86_64": [],
+++                "//build_config:windows": [],
++                 "//conditions:default": ["-Wno-unused-function"],
++             }) + copts,
++             linkopts = select({
++@@ -326,7 +326,7 @@ def xnnpack_unit_test(name, srcs, copts = [], mingw_copts = [], msys_copts = [],
++                 "//build_config:windows_x86_64_clang": ["/clang:-Wno-unused-function"],
++                 "//build_config:windows_x86_64_mingw": ["-Wno-unused-function"],
++                 "//build_config:windows_x86_64_msys": ["-Wno-unused-function"],
++-                "//build_config:windows_x86_64": [],
+++                "//build_config:windows": [],
++                 "//conditions:default": ["-Wno-unused-function"],
++             }) + copts,
++             linkopts = select({
++@@ -398,7 +398,7 @@ def xnnpack_benchmark(name, srcs, copts = [], deps = [], tags = [], defines = []
++             "//build_config:windows_x86_64_clang": ["/clang:-Wno-unused-function"],
++             "//build_config:windows_x86_64_mingw": ["-Wno-unused-function"],
++             "//build_config:windows_x86_64_msys": ["-Wno-unused-function"],
++-            "//build_config:windows_x86_64": [],
+++            "//build_config:windows": [],
++             "//conditions:default": ["-Wno-unused-function"],
++         }) + copts,
++         linkopts = select({

@@ -107,14 +107,6 @@ http_archive(
     url = "http://zlib.net/fossils/zlib-1.2.13.tar.gz",
 )
 
-# gflags needed by glog
-http_archive(
-    name = "com_github_gflags_gflags",
-    sha256 = "19713a36c9f32b33df59d1c79b4958434cb005b5b47dc5400a7a4b078111d9b5",
-    strip_prefix = "gflags-2.2.2",
-    url = "https://github.com/gflags/gflags/archive/v2.2.2.zip",
-)
-
 # 2020-08-21
 http_archive(
     name = "com_github_glog_glog",
@@ -228,15 +220,6 @@ http_archive(
     ],
 )
 
-# XNNPACK on 2024-11-18
-http_archive(
-    name = "XNNPACK",
-    # `curl -L <url> | shasum -a 256`
-    sha256 = "af30fe2b301330a7e19cd422acf22991de3c1f5d91dda58e9ee67544d608fa51",
-    strip_prefix = "XNNPACK-dc1549a7141c7a9496ae160bb27b8700f0f6e1f1",
-    url = "https://github.com/google/XNNPACK/archive/dc1549a7141c7a9496ae160bb27b8700f0f6e1f1.zip",
-)
-
 # 2020-07-09
 http_archive(
     name = "pybind11_bazel",
@@ -275,15 +258,6 @@ http_archive(
     ],
 )
 
-http_archive(
-    name = "cpuinfo",
-    sha256 = "e2bd8049d29dfbed675a0bc7c01947f8b8bd3f17f706b827d3f6c1e5c64dd8c3",
-    strip_prefix = "cpuinfo-8df44962d437a0477f07ba6b8843d0b6a48646a4",
-    urls = [
-        "https://github.com/pytorch/cpuinfo/archive/8df44962d437a0477f07ba6b8843d0b6a48646a4.zip",
-    ],
-)
-
 # TF on 2024-09-24
 _TENSORFLOW_GIT_COMMIT = "5329ec8dd396487982ef3e743f98c0195af39a6b"
 
@@ -302,6 +276,8 @@ http_archive(
         # Works around Bazel issue with objc_library.
         # See https://github.com/bazelbuild/bazel/issues/19912
         "@//third_party:org_tensorflow_objc_build_fixes.diff",
+        # Support for Windows x86_32
+        "@//third_party:org_tensorflow_windows_x86_32.diff",
     ],
     sha256 = _TENSORFLOW_SHA256,
     strip_prefix = "tensorflow-%s" % _TENSORFLOW_GIT_COMMIT,
@@ -385,14 +361,6 @@ rules_foreign_cc_dependencies()
 load("@bazel_features//:deps.bzl", "bazel_features_deps")
 
 bazel_features_deps()
-
-# TODO: This is an are indirect dependency. We should factor it out.
-http_archive(
-    name = "pthreadpool",
-    sha256 = "a4cf06de57bfdf8d7b537c61f1c3071bce74e57524fe053e0bbd2332feca7f95",
-    strip_prefix = "pthreadpool-4fe0e1e183925bf8cfa6aae24237e724a96479b8",
-    urls = ["https://github.com/Maratyszcza/pthreadpool/archive/4fe0e1e183925bf8cfa6aae24237e724a96479b8.zip"],
-)
 
 load(
     "@build_bazel_rules_apple//apple:repositories.bzl",
@@ -584,7 +552,13 @@ new_local_repository(
 new_local_repository(
     name = "windows_opencv",
     build_file = "@//third_party:opencv_windows.BUILD",
-    path = "C:\\opencv\\build",
+    path = "C:\\opencv\\opencv454\\build",
+)
+
+new_local_repository(
+    name = "windows_opencv_x86",
+    build_file = "@//third_party:opencv_windows_x86.BUILD",
+    path = "C:\\opencv\\opencv454\\build",
 )
 
 http_archive(
