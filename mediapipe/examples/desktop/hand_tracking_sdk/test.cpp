@@ -77,9 +77,9 @@ absl::Status RunMPPGraph() {
   }
 
   LOG(INFO) << "Start running the calculator graph.";
-  ASSIGN_OR_RETURN(mediapipe::OutputStreamPoller poller,
+  MP_ASSIGN_OR_RETURN(mediapipe::OutputStreamPoller poller,
                    graph.AddOutputStreamPoller("landmarks", true));
-  ASSIGN_OR_RETURN(mediapipe::OutputStreamPoller handedness_poller,
+  MP_ASSIGN_OR_RETURN(mediapipe::OutputStreamPoller handedness_poller,
                    graph.AddOutputStreamPoller("handedness", true));
   MP_RETURN_IF_ERROR(graph.StartRun({}));
 

@@ -37,9 +37,9 @@ absl::Status HandTrackingMMPGraph::InitMPPGraph(
 
   MP_RETURN_IF_ERROR(graph.Initialize(config));
 
-  ASSIGN_OR_RETURN(auto landmarks_poller,
+  MP_ASSIGN_OR_RETURN(auto landmarks_poller,
                    graph.AddOutputStreamPoller("landmarks", true));
-  ASSIGN_OR_RETURN(auto handedness_poller,
+  MP_ASSIGN_OR_RETURN(auto handedness_poller,
                    graph.AddOutputStreamPoller("handedness", true));
   landmarks_poller_ = absl::make_unique<mediapipe::OutputStreamPoller>(
       std::move(landmarks_poller));

@@ -30,7 +30,7 @@ absl::Status HairSegMMPGraph::InitMPPGraph(
 
   MP_RETURN_IF_ERROR(graph.Initialize(config));
 
-  ASSIGN_OR_RETURN(auto mask_poller,
+  MP_ASSIGN_OR_RETURN(auto mask_poller,
                    graph.AddOutputStreamPoller("hair_mask", true));
   mask_poller_ =
       absl::make_unique<mediapipe::OutputStreamPoller>(std::move(mask_poller));
