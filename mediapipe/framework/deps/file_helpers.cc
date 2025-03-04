@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "mediapipe/framework/deps/file_helpers.h"
+#include "mediapipe/calculators/util/global_model_path_map.h"
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -158,8 +159,10 @@ class DirectoryListing {
 
 }  // namespace
 
-absl::Status GetContents(absl::string_view path, std::string* output,
+absl::Status GetContents(absl::string_view path_v, std::string* output,
                          bool read_as_binary) {
+  std::string path = std::string(path_v);
+  GlobalModelPathMap::GetRealModelPath(path);
   FILE* fp = fopen(std::string(path).c_str(), read_as_binary ? "rb" : "r");
   if (fp == NULL) {
     return absl::NotFoundError(absl::StrCat("Can't find file: ", path));

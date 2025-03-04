@@ -136,6 +136,7 @@ cc_library(
         ":mmapped_file",
         ":platform_strings",
         "//mediapipe/framework/port:status",
+        "//mediapipe/calculators/util:global_model_path_map",
         "@com_google_absl//absl/base:config",
         "@com_google_absl//absl/cleanup",
         "@com_google_absl//absl/status",
