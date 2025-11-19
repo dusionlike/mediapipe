@@ -15,5 +15,6 @@ cc_binary(
         "//mediapipe/examples/desktop/face_mesh_sdk",
         "//mediapipe/examples/desktop/hair_segmentation_sdk",
         "//mediapipe/examples/desktop/hand_tracking_sdk",
+        "//mediapipe/examples/desktop/pose_tracking_sdk",
     ],
 )
