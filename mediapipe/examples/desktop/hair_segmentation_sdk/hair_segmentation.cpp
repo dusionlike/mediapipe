@@ -48,15 +48,12 @@ absl::Status HairSegMMPGraph::ReleaseMPPGraph() {
 
 absl::Status HairSegMMPGraph::RunMPPGraphByImageMode(const cv::Mat& ori_img,
                                                      cv::Mat& output_mask) {
-  auto res = RunMPPGraph(ori_img, output_mask);
-
-  MP_RETURN_IF_ERROR(graph.CloseAllInputStreams());
-
-  return res;
+  return RunMPPGraph(ori_img, output_mask, true);
 }
 
 absl::Status HairSegMMPGraph::RunMPPGraph(const cv::Mat& ori_img,
-                                          cv::Mat& output_mask) {
+                                          cv::Mat& output_mask,
+                                          bool is_image_mode) {
   if (graph.GraphInputStreamsClosed()) {
     MP_RETURN_IF_ERROR(graph.StartRun({}));
   }
@@ -73,11 +70,18 @@ absl::Status HairSegMMPGraph::RunMPPGraph(const cv::Mat& ori_img,
   img.copyTo(input_frame_mat);
 
   // Send image packet into the graph.
-  size_t frame_timestamp_us =
-      (double)cv::getTickCount() / (double)cv::getTickFrequency() * 1e6;
-  MP_RETURN_IF_ERROR(graph.AddPacketToInputStream(
-      kInputStream, mediapipe::Adopt(input_frame.release())
-                        .At(mediapipe::Timestamp(frame_timestamp_us))));
+  if (is_image_mode) {
+    MP_RETURN_IF_ERROR(graph.AddPacketToInputStream(
+        kInputStream, mediapipe::Adopt(input_frame.release())
+                          .At(mediapipe::Timestamp(0))));
+    MP_RETURN_IF_ERROR(graph.CloseInputStream(kInputStream));
+  } else {
+    size_t frame_timestamp_us =
+        (double)cv::getTickCount() / (double)cv::getTickFrequency() * 1e6;
+    MP_RETURN_IF_ERROR(graph.AddPacketToInputStream(
+        kInputStream, mediapipe::Adopt(input_frame.release())
+                          .At(mediapipe::Timestamp(frame_timestamp_us))));
+  }
 
   mediapipe::Packet mask_packet;
   if (mask_poller_->Next(&mask_packet) && !mask_packet.IsEmpty()) {

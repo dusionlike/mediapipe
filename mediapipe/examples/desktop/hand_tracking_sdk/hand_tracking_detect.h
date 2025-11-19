@@ -67,6 +67,6 @@ node {
 
   absl::Status ReleaseMPPGraph();
 
-  absl::Status RunMPPGraph(const cv::Mat &img, std::vector<HandInfo> &hands);
+  absl::Status RunMPPGraph(const cv::Mat &img, std::vector<HandInfo> &hands, bool is_image_mode = false);
   absl::Status RunMPPGraphByImageMode(const cv::Mat &img, std::vector<HandInfo> &hands);
 };

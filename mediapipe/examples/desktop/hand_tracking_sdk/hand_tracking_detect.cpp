@@ -60,15 +60,12 @@ absl::Status HandTrackingMMPGraph::ReleaseMPPGraph() {
 
 absl::Status HandTrackingMMPGraph::RunMPPGraphByImageMode(
     const cv::Mat& ori_img, std::vector<HandInfo>& hands) {
-  auto res = RunMPPGraph(ori_img, hands);
-
-  MP_RETURN_IF_ERROR(graph.CloseAllInputStreams());
-
-  return res;
+  return RunMPPGraph(ori_img, hands, true);
 }
 
 absl::Status HandTrackingMMPGraph::RunMPPGraph(const cv::Mat& ori_img,
-                                               std::vector<HandInfo>& hands) {
+                                               std::vector<HandInfo>& hands,
+                                               bool is_image_mode) {
   if (graph.GraphInputStreamsClosed()) {
     MP_RETURN_IF_ERROR(graph.StartRun({}));
   }
@@ -84,11 +81,18 @@ absl::Status HandTrackingMMPGraph::RunMPPGraph(const cv::Mat& ori_img,
   img.copyTo(input_frame_mat);
 
   // Send image packet into the graph.
-  size_t frame_timestamp_us =
-      (double)cv::getTickCount() / (double)cv::getTickFrequency() * 1e6;
-  MP_RETURN_IF_ERROR(graph.AddPacketToInputStream(
-      kInputStream, mediapipe::Adopt(input_frame.release())
-                        .At(mediapipe::Timestamp(frame_timestamp_us))));
+  if (is_image_mode) {
+    MP_RETURN_IF_ERROR(graph.AddPacketToInputStream(
+    kInputStream, mediapipe::Adopt(input_frame.release())
+                      .At(mediapipe::Timestamp(0))));
+    MP_RETURN_IF_ERROR(graph.CloseInputStream(kInputStream));
+  } else {
+    size_t frame_timestamp_us =
+        (double)cv::getTickCount() / (double)cv::getTickFrequency() * 1e6;
+    MP_RETURN_IF_ERROR(graph.AddPacketToInputStream(
+        kInputStream, mediapipe::Adopt(input_frame.release())
+                          .At(mediapipe::Timestamp(frame_timestamp_us))));
+  }
 
   std::vector<std::vector<cv::Point>> all_cv_landmarks;
 

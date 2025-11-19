@@ -79,15 +79,12 @@ absl::Status FaceMeshMMPGraph::ReleaseMPPGraph() {
 
 absl::Status FaceMeshMMPGraph::RunMPPGraphByImageMode(
     const cv::Mat &img, std::vector<FaceInfo> &faces) {
-  auto res = RunMPPGraph(img, faces);
-
-  MP_RETURN_IF_ERROR(graph.CloseAllInputStreams());
-
-  return res;
+  return RunMPPGraph(img, faces, true);
 }
 
 absl::Status FaceMeshMMPGraph::RunMPPGraph(const cv::Mat &ori_img,
-                                           std::vector<FaceInfo> &faces) {
+                                           std::vector<FaceInfo> &faces,
+                                           bool is_image_mode) {
   if (graph.GraphInputStreamsClosed()) {
     MP_RETURN_IF_ERROR(graph.StartRun({}));
   }
@@ -103,11 +100,18 @@ absl::Status FaceMeshMMPGraph::RunMPPGraph(const cv::Mat &ori_img,
   img.copyTo(input_frame_mat);
 
   // Send image packet into the graph.
-  size_t frame_timestamp_us =
-      (double)cv::getTickCount() / (double)cv::getTickFrequency() * 1e6;
-  MP_RETURN_IF_ERROR(graph.AddPacketToInputStream(
-      kInputStream, mediapipe::Adopt(input_frame.release())
-                        .At(mediapipe::Timestamp(frame_timestamp_us))));
+  if (is_image_mode) {
+    MP_RETURN_IF_ERROR(graph.AddPacketToInputStream(
+    kInputStream, mediapipe::Adopt(input_frame.release())
+                      .At(mediapipe::Timestamp(0))));
+    MP_RETURN_IF_ERROR(graph.CloseInputStream(kInputStream));
+  } else {
+    size_t frame_timestamp_us =
+        (double)cv::getTickCount() / (double)cv::getTickFrequency() * 1e6;
+    MP_RETURN_IF_ERROR(graph.AddPacketToInputStream(
+        kInputStream, mediapipe::Adopt(input_frame.release())
+                          .At(mediapipe::Timestamp(frame_timestamp_us))));
+  }
 
   mediapipe::Packet landmarks_packet;
   if (face_landmarks_poller_->Next(&landmarks_packet) &&

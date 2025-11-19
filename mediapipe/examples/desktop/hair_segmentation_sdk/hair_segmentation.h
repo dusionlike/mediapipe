@@ -167,7 +167,7 @@ node {
 
   absl::Status ReleaseMPPGraph();
 
-  absl::Status RunMPPGraph(const cv::Mat& img, cv::Mat& output_mask);
+  absl::Status RunMPPGraph(const cv::Mat& img, cv::Mat& output_mask, bool is_image_mode = false);
   absl::Status RunMPPGraphByImageMode(const cv::Mat& ori_img,
                                       cv::Mat& output_mask);
 };
